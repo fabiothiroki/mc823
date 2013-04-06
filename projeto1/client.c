@@ -19,8 +19,8 @@
 
 #include "aux_functions.h"
 
-// Identificador da porta a qual o cliente ira se conectar
-#define PORT "3490" 
+// Porta efêmera que o cliente usará para se conectar
+#define PORT "49152" 
 
 // Numero maximo de bytes que cada resposta pode conter
 #define MAXDATASIZE 4486

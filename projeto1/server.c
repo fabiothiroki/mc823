@@ -20,7 +20,7 @@
 
 #include "aux_functions.h"
 
-#define PORT "3490"  // a porta a qual os usuarios se conectarao
+#define PORT "49152"  // porta de entrada dos clientes
 #define BACKLOG 10   // define o numero maximo de conexoes pendentes
 
 #define NUMBER_MOVIES 13
@@ -79,6 +79,7 @@ typedef struct movieStruct {
 Movie filmes[NUMBER_MOVIES];
 
 void loadBooksFromDB(){
+  int i=0;
 
   // Array que armazenara cada linha do arquivo de livros, para tratar
   // cada campos posteriormente
@@ -268,7 +269,6 @@ int main(int argc, char * argv[]) {
   int yes=1;
   char s[INET6_ADDRSTRLEN];
   int rv;
-  int i=0;
   int ativo; // Booleano que indica se a conexao deve continuar ativa
   
   // Vetor que contera a opcao do cliente (mais o id do filme, se for o
