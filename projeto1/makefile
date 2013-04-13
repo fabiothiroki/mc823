@@ -1,4 +1,4 @@
-all: server client
+all: server client server_sqlite
 
 server: aux_functions.o
 	gcc -g aux_functions.o server.c -o server

@@ -106,79 +106,90 @@ void findAllMovies(char response[]) {
   
 }
 
-/**
- * Define se o sockaddr é IPv4 ou IPv6
- *
- * @param sa socket
- */
-void *get_in_addr(struct sockaddr *sa) {
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-/**
- * Principal
- */
 int main(int argc, char* argv[]) {
-  int sockfd;  
-  struct addrinfo hints, *servinfo, *p;
-  int rv;
-  char s[INET6_ADDRSTRLEN];
-  
-  char option = '0';          // Armazena opcao escolhida 
-  char buffer[6];             // Buffer para envio de requisicao
-  char response[MAXDATASIZE]; // Buffer de resposta
-  char aux[3];
+    // File descriptor do socket
+    int sfd;  
+    struct addrinfo hints, *result, *rp;
+    int rv;
+    char s[INET6_ADDRSTRLEN];
 
-  int ativo;
-  
-  if (argc != 2) {
-    fprintf(stderr,"usage: client hostname\n");
-    exit(1);
-  }
-  
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  
-  if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-    return 1;
-  }
-  
-  // loop through all the results and connect to the first we can
-  for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((sockfd = socket(p->ai_family, p->ai_socktype,
-			 p->ai_protocol)) == -1) {
-      perror("client: socket");
-      continue;
+    char option = '0';          // Armazena opcao escolhida 
+    char buffer[6];             // Buffer para envio de requisicao
+    char response[MAXDATASIZE]; // Buffer de resposta
+    char aux[3];
+
+    int ativo;
+
+    if (argc != 2) {
+        fprintf(stderr,"usage: client hostname\n");
+        exit(1);
     }
-    
-    if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-      close(sockfd);
-      perror("client: connect");
-      continue;
+  
+    // hints define o tipo de endereço que estamos procurando no getaddrinfo
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+
+    /* getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints". */
+    if ((getaddrinfo(argv[1], PORT, &hints, &result)) != 0) {
+        perror("Erro getaddrinfo\n");
+        exit(0);
     }
+  
+    // Percorre todos os endereços encontrados no getaddrinfo
+    // Faz o "bind" para o primeiro socket criado com sucesso
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+
+        // socket() retorna um inteiro similar a um descritor de arquivos relacionado ao socket criado, 
+        // através do qual ele pode ser referenciado
+        sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (sfd == -1){
+            perror("client: socket");
+            continue;
+        }
+
+        // if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+            // break;                  /* Success */
+
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
+            close(sfd);
+            perror("client: connect");
+            continue;    
+        }
+
+        break;
+    }
+
+    if (rp == NULL) {
+        /* No address succeeded */              
+        printf("Could not bind\n");
+        exit(0);
+    }
+
+    freeaddrinfo(result); // all done with this structure
     
-    break;
-  }
-  
-  if (p == NULL) {
-    fprintf(stderr, "client: failed to connect\n");
-    return 2;
-  }
-  
-  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-            s, sizeof s);
-  printf("client: connecting to %s\n", s);
-  
-  freeaddrinfo(servinfo); // all done with this structure
-  
+    int connected = 1;
+    char buf[100]; int numbytes;
+
+    if ((numbytes=recv(sfd, buf, 100, 0)) == -1) 
+    {
+        perror("recv");
+        exit(1);
+    }
+
+    printf("%s \n", buf);
+
+    while (connected) {
+
+        
+        
+        connected = 0;
+
+    }
+
+      
   // MENU
-  ativo = 1;
+  ativo = 0;
   while(ativo) {
 
     printf("\n\n******************************************************\n");
@@ -197,8 +208,8 @@ int main(int argc, char* argv[]) {
     switch ( option ) {
     case '1' :
       // Exibe id e titulo de todos os filmes
-      send(sockfd, buffer, 6, 0);
-      recv(sockfd, response, MAXDATASIZE, 0);
+      send(sfd, buffer, 6, 0);
+      recv(sfd, response, MAXDATASIZE, 0);
       listAllMovies(response);
       getchar();
       break;
@@ -208,8 +219,8 @@ int main(int argc, char* argv[]) {
       printf("Digite o número do filme: ");
       scanf("%s", aux);
       strcat(buffer,aux);
-      send(sockfd, buffer, 6, 0);
-      recv(sockfd, response, MAXDATASIZE, 0);
+      send(sfd, buffer, 6, 0);
+      recv(sfd, response, MAXDATASIZE, 0);
       printf("\n=======================================================\n");
       printf("\n\nSINOPSE: %s\n", response);
       printf("\n=======================================================\n");
@@ -221,23 +232,23 @@ int main(int argc, char* argv[]) {
       printf("Digite o número do filme: ");
       scanf("%s", aux);
       strcat(buffer,aux);
-      send(sockfd, buffer, 6, 0);
-      recv(sockfd, response, MAXDATASIZE, 0);
+      send(sfd, buffer, 6, 0);
+      recv(sfd, response, MAXDATASIZE, 0);
       findMovieById(response);
       getchar();
       break;
       
     case '4':
       // Exibe todas as informacoes de todos os filmes
-      send(sockfd, buffer, 6, 0);
-      recv(sockfd, response, MAXDATASIZE, 0);
+      send(sfd, buffer, 6, 0);
+      recv(sfd, response, MAXDATASIZE, 0);
       findAllMovies(response);
       getchar();
       break;
       
     case '5':
       // Envia solicitacao de encerramento de conexao
-      send(sockfd, buffer, 6, 0);
+      send(sfd, buffer, 6, 0);
       ativo = 0;
       break;
 
@@ -249,7 +260,7 @@ int main(int argc, char* argv[]) {
     
   }
   
-  close(sockfd);
+  close(sfd);
   
   return 0;
 }
