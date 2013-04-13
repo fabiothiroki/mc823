@@ -168,27 +168,32 @@ int main(int argc, char* argv[]) {
 
     freeaddrinfo(result); // all done with this structure
     
-    int connected = 1;
     char buf[100]; int numbytes;
 
-    if ((numbytes=recv(sfd, buf, 100, 0)) == -1) 
-    {
+    if ((numbytes=recv(sfd, buf, 100, 0)) == -1) {
         perror("recv");
         exit(1);
     }
 
+    // welcome message
     printf("%s \n", buf);
 
+    int connected = 1;
     while (connected) {
 
+        printf("\n\n******************************************************\n");
+        printf("Catálogo de livros!\n\n");
+        printf("1 - Exibir número e título de todos os filmes.\n");
+        printf("2 - Exibir sinopse de um filme.\n");
+        printf("3 - Exibir todas informacoes de um filme\n");
+        printf("4 - Exibir todas informacoes de todos os filmes\n");
+        printf("5 - Sair\n");
+        printf("******************************************************\n");
         
-        
-        connected = 0;
 
     }
 
       
-  // MENU
   ativo = 0;
   while(ativo) {
 
