@@ -7,8 +7,13 @@
 #include <netdb.h>
 #include <signal.h>
 
-#define PORT "49152"  // porta (efemera) de entrada dos clientes
+// porta (efemera) de entrada dos clientes
+#define PORT "49152"  
 #define BACKLOG 10
+
+// mensagem contendo o request do cliente
+// contem a opcao do cliente, id do livro e o id do usuario
+char msg[4];	
 
 typedef struct bookStruct {
   char isbn[11];		
@@ -54,18 +59,31 @@ void loadBooks(){
 
 }
 
-// Pega todos os processos 'mortos'
+// Mata todos os processos zumbis
 void sigchld_handler(int s) {
-    while(waitpid(-1, NULL, WNOHANG) > 0);
+	pid_t pid;
+	int stat; 
+    while((pid = waitpid(-1, &stat, WNOHANG)) > 0) {
+    	printf("child %d terminated\n", pid); 
+    }
 }
 
 int main(void) {
 
+	// File descriptors dos sockets
 	int sfd, new_fd;
 
 	struct sigaction sa;
 
 	struct addrinfo hints, *result	, *rp;
+
+	socklen_t sin_size;
+
+	//informacao de endereco dos conectores
+  	struct sockaddr_storage their_addr; 	
+
+  	// status da conexao com um cliente
+	int connected;
 
 	// Carrega todas as informações do livro do banco de dados
 	loadBooks();
@@ -113,6 +131,7 @@ int main(void) {
     	return 1;
     }
 
+    // trata o sinal recebido pelos processos filhos
     sa.sa_handler = sigchld_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
@@ -121,7 +140,39 @@ int main(void) {
       return 1;
     }
 
-    printf("SERVER -> waiting connections from clients...\n");
+
+	printf("SERVER -> waiting connections from clients...\n");
+
+    while(1) {
+    	// accept(): responsável por aceitar uma conexão em socket
+    	sin_size = sizeof their_addr;
+    	new_fd = accept(sfd, (struct sockaddr *)&their_addr, &sin_size);
+    	if (new_fd == -1) {
+    	  printf("ERROR: accept");
+    	  continue;
+    	}
+
+    	printf("SERVER: conexao aceita\n");
+
+    	if (!fork()) {
+
+    		close(sfd); 
+
+    		connected = 1;
+    		while(connected){
+
+    			//recv(): recebe dados em um socket
+    			if(recv(new_fd,msg, 4, 0) == -1) {
+    				printf("ERROR: recv");
+    			}
+
+    			printf("opt: %s",msg[0]);
+
+    		}
+
+    	}
+
+    }
 
 	return 0;
 }
