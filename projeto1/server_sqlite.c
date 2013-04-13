@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <netdb.h>
+#include <signal.h>
+
+#define PORT "49152"  // porta (efemera) de entrada dos clientes
+#define BACKLOG 10
 
 typedef struct bookStruct {
   char isbn[11];		
@@ -39,16 +47,81 @@ void loadBooks(){
 	 	strcpy(arr_books[i].author,sqlite3_column_text(res, 1));
 	 	strcpy(arr_books[i].description,sqlite3_column_text(res, 2));
 
-	 	printf("\n");
-	 	printf("%s \n",arr_books[i].title);
-	 	printf("%s \n",arr_books[i].author);
+	 	// printf("\n");
+	 	// printf("%s \n",arr_books[i].title);
+	 	// printf("%s \n",arr_books[i].author);
 	 }
 
 }
 
+// Pega todos os processos 'mortos'
+void sigchld_handler(int s) {
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+}
+
 int main(void) {
 
+	int sfd, new_fd;
+
+	struct sigaction sa;
+
+	struct addrinfo hints, *result	, *rp;
+
+	// Carrega todas as informações do livro do banco de dados
 	loadBooks();
+
+	// hints define o tipo de endereço que estamos procurando no getaddrinfo
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+	hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+	hints.ai_flags = AI_PASSIVE;
+
+	/* getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints". */
+	if ((getaddrinfo(NULL, PORT, &hints, &result)) != 0) {
+		printf("Erro getaddrinfo\n");
+		return 0;
+	}
+
+	// Percorre todos os endereços encontrados no getaddrinfo
+	// Faz o "bind" para o primeiro socket criado com sucesso
+	for (rp = result; rp != NULL; rp = rp->ai_next) {
+
+		// socket() retorna um inteiro similar a um descritor de arquivos relacionado ao socket criado, 
+		// através do qual ele pode ser referenciado
+		sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if (sfd == -1)
+            continue;
+
+        // bind() associa uma porta para o socket
+        if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
+        	break; 
+
+        close(sfd);
+	}
+
+	if (rp == NULL) {
+		/* No address succeeded */              
+        printf("Could not bind\n");
+        return 1;
+    }
+
+    freeaddrinfo(result);
+    
+    // Seta o número de conexões permitidas para o socket criado
+    if (listen(sfd, BACKLOG) == -1) {
+    	printf("ERROR: listen\n");
+    	return 1;
+    }
+
+    sa.sa_handler = sigchld_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+      printf("ERROR: sigaction");
+      return 1;
+    }
+
+    printf("SERVER -> waiting connections from clients...\n");
 
 	return 0;
 }

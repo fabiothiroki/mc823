@@ -257,6 +257,7 @@ void *get_in_addr(struct sockaddr *sa) {
  * Principal
  */
 int main(int argc, char * argv[]) {
+  
   //sockfd refere-se à escuta, new_fd a novas conexoes
   int sockfd, new_fd;  			
   struct addrinfo hints, *servinfo, *p;
@@ -279,7 +280,7 @@ int main(int argc, char * argv[]) {
     
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_socktype = SOCK_STREAM; // Stream socket
   hints.ai_flags = AI_PASSIVE;
   
   if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
@@ -287,21 +288,22 @@ int main(int argc, char * argv[]) {
     return 1;
   }
   
-  // Percorre a lista ligada e realiza 'bind' ao primeiro que for
-  // possivel
+  // Percorre a lista ligada e realiza 'bind' ao primeiro que for possivel
+  // Cria todos os file descriptors dos sockets, dando nome a eles
   for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((sockfd = socket(p->ai_family, p->ai_socktype,
-			 p->ai_protocol)) == -1) {
+
+    //Função SOCKET: cria um socket, dando acesso ao serviço da camada de transporte
+    if ((sockfd = socket(p->ai_family, p->ai_socktype,p->ai_protocol)) == -1) {
       perror("server: socket");
       continue;
     }
     
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
-		   sizeof(int)) == -1) {
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
       perror("setsockopt");
       exit(1);
     }
     
+    //Função bind: atribui um nome ao socket
     if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
       close(sockfd);
       perror("server: bind");
@@ -311,6 +313,7 @@ int main(int argc, char * argv[]) {
     break;
   }
   
+  // Debug de erro
   if (p == NULL)  {
     fprintf(stderr, "servidor: falha ao realizar 'bind'\n");
     return 2;
@@ -319,6 +322,7 @@ int main(int argc, char * argv[]) {
   // Necessario devido à chamada 'getaddrinfo' acima
   freeaddrinfo(servinfo); 
   
+  // Anuncia que está apto para receber conexões
   if (listen(sockfd, BACKLOG) == -1) {
     perror("listen");
     exit(1);
@@ -343,9 +347,7 @@ int main(int argc, char * argv[]) {
       continue;
     }
     
-    inet_ntop(their_addr.ss_family,
-	      get_in_addr((struct sockaddr *)&their_addr),
-	      s, sizeof s);
+    inet_ntop(their_addr.ss_family,get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
     printf("servidor: conexao obtida de %s\n", s);
     
     // Processo filho
