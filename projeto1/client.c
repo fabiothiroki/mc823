@@ -30,6 +30,21 @@
 
 #define NUMBER_MOVIES 13
 
+void printMenu(bool isClientLibrary) {
+  printf("\n\n******************************************************\n");
+  printf("Catálogo de livros! Entre com uma das opções abaixo e pressione ENTER\n\n");
+  printf("0 - Sair\n");
+  printf("1 - Listar ISBN e título de todos os livros\n");
+  printf("2 - Exibir descrição de um livro\n");
+  printf("3 - Exibir todas informacoes de um livro\n");
+  printf("4 - Exibir todas informacoes de todos os livros\n");
+  printf("5 - Exibir a quantidade de um livro");
+  if (isClientLibrary) {
+    printf("6 - Alterar a quantidade de um livro");
+  }
+  printf("******************************************************\n");
+}
+
 /**
  * Lista o id e o titulo de todos os filmes
  *
@@ -180,31 +195,18 @@ int main(int argc, char* argv[]) {
 
     int connected = 1;
     while (connected) {
-
-        printf("\n\n******************************************************\n");
-        printf("Catálogo de livros!\n\n");
-        printf("1 - Exibir número e título de todos os filmes.\n");
-        printf("2 - Exibir sinopse de um filme.\n");
-        printf("3 - Exibir todas informacoes de um filme\n");
-        printf("4 - Exibir todas informacoes de todos os filmes\n");
-        printf("5 - Sair\n");
-        printf("******************************************************\n");
         
+        printMenu(0);
+
+        scanf("%c", &option);
+        buffer[0] = option;
+        buffer[1] = '\0';
 
     }
 
       
   ativo = 0;
   while(ativo) {
-
-    printf("\n\n******************************************************\n");
-    printf("SERVIDOR DE FILMES:\n\n");
-    printf("1 - Exibir número e título de todos os filmes.\n");
-    printf("2 - Exibir sinopse de um filme.\n");
-    printf("3 - Exibir todas informacoes de um filme\n");
-    printf("4 - Exibir todas informacoes de todos os filmes\n");
-    printf("5 - Sair\n");
-    printf("******************************************************\n");
 
     scanf("%c", &option);
     buffer[0] = option;

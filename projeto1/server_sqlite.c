@@ -24,7 +24,6 @@ typedef struct bookStruct {
   char description[300];
   char publisher[50];
   char year[3];	
-  char horarios[18];	
   char quantity[2];	
 } Book;
 
@@ -42,7 +41,7 @@ void loadBooks(){
 	error = sqlite3_open("database.sqlite", &conn);
 
 	if (error) {
-		printf("Can not open database");
+		perror("Can not open database");
 	}
 
 	 error = sqlite3_prepare_v2(conn, "select title,author,description from books order by title",1000, &res, &tail);
@@ -53,6 +52,9 @@ void loadBooks(){
 	 	strcpy(arr_books[i].title,sqlite3_column_text(res, 0));
 	 	strcpy(arr_books[i].author,sqlite3_column_text(res, 1));
 	 	strcpy(arr_books[i].description,sqlite3_column_text(res, 2));
+    strcpy(arr_books[i].publisher,sqlite3_column_text(res, 3));
+    strcpy(arr_books[i].year,sqlite3_column_text(res, 4));
+    strcpy(arr_books[i].quantity,sqlite3_column_text(res, 5));
 
 	 	// printf("\n");
 	 	// printf("%s \n",arr_books[i].title);
