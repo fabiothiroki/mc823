@@ -202,6 +202,53 @@ int main(int argc, char* argv[]) {
         buffer[0] = option;
         buffer[1] = '\0';
 
+        switch ( option ) {
+
+          // Sair
+          case '0' :
+            send(sfd, buffer, 6, 0);
+            connected = 0;
+            break;
+
+          //Listar ISBN e título de todos os livros
+          case '1' :
+
+          break;
+
+          //Exibir descrição de um livro
+          case '2' :
+
+          break;
+
+          //Exibir todas informacoes de um livro
+          case '3' :
+
+          break;
+
+          //Exibir todas informacoes de todos os livros
+          case '4' :
+
+          break;
+
+          //Exibir a quantidade de um livro
+          case '5' :
+
+          break;
+
+          //Alterar a quantidade de um livro
+          case '6' :
+
+          break;
+
+          default:
+            printf("Opção inválida");
+            getchar();
+            break;
+          }
+        }
+        close(sfd);
+
+        return 0;
     }
 
       
