@@ -27,11 +27,29 @@
 #define REG_SEP '\n'
 #define FIELD_SEP '|'
 
-#define NUMBER_MOVIES 13
+char ** split(char * string, char delim){
+
+  char * pch;
+  char *temp = &delim;
+  char ** vector;
+
+  vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
+
+  pch = strtok (string,temp);
+  int i = 0;
+  while (pch != NULL) {
+    vector[i] = pch;
+    pch = strtok (NULL, temp);
+    i++;
+  }
+  return vector;
+
+}
 
 void printMenu(int isClientLibrary) {
   printf("\n\n******************************************************\n");
   printf("Catálogo de livros! Entre com uma das opções abaixo e pressione ENTER\n\n");
+  printf("p - Imprimir esse menu\n");
   printf("0 - Sair\n");
   printf("1 - Listar ISBN e título de todos os livros\n");
   printf("2 - Exibir descrição de um livro\n");
@@ -72,61 +90,34 @@ void listAllBooks(char response[]) {
   
 }
 
+void listAllBooksInfo (char response[]) { 
+  char ** temp;
+  char ** all_books;
+  char ** all_info;
+  int i = 0;
+
+  temp = split(response, '#');
+
+  int len = atoi(temp[0]); 
+  all_books = split(temp[1], '\n');
+
+  for(i = 0; i < len; i++) {
+    all_info = split(all_books[i], '|');
+    
+    printf("%s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6]);
+
+    free(all_info);
+  }
+  free(all_books);
+  free(temp);
+}
+
 void showBookDesc(char response[]){
 
   printf("%s \n", response);
 
 }
 
-/**
- * Exibe todas as informacoes de um filme que possui o numero dado
- *
- * @param response buffer preenchido com a resposta enviada pelo servidor
- */
-void findMovieById(char response[]) {
-  char ** movie_info;
-
-  movie_info = split(response, FIELD_SEP);
-
-  printf("\n\n");
-  printf("DADOS DO FILME: \n\n");
-  printf("NÚMERO  : %s\n", movie_info[0]);
-  printf("TÍTULO  : %s\n", movie_info[1]);
-  printf("SINOPSE : %s\n", movie_info[2]);
-  printf("SALA    : %s\n", movie_info[3]);
-  printf("HORÁRIOS: %s\n", movie_info[4]);
-  printf("\n\n");
-
-}
-/**
- * Exibe todas as informacoes de todos os filmes
- *
- * @param response buffer preenchido com a resposta enviada pelo servidor
-*/
-void findAllMovies(char response[]) {
-  char ** all_movies;
-  char ** info_movie;
-  int i = 0;
-
-  all_movies = split(response, REG_SEP);
-
-  printf("\n\n");
-  printf("=====FILMES=====\n\n\n");
-
-  for(i = 0; i < NUMBER_MOVIES; i++) {
-    info_movie = split(all_movies[i], FIELD_SEP);
-    printf("NÚMERO  : %s\n", info_movie[0]);
-    printf("TÍTULO  : %s\n", info_movie[1]);
-    printf("SINOPSE : %s\n", info_movie[2]);
-    printf("SALA    : %s\n", info_movie[3]);
-    printf("HORÁRIOS: %s\n", info_movie[4]);
-    printf("===========================================================================\n");
-
-    free(info_movie);
-  }
-  free(all_movies);
-  
-}
 
 int main(int argc, char* argv[]) {
     // File descriptor do socket
@@ -134,15 +125,22 @@ int main(int argc, char* argv[]) {
     struct addrinfo hints, *result, *rp;
     int rv;
     char s[INET6_ADDRSTRLEN];
-
+    int isClientLibrary = 0;
     
     char response[MAXDATASIZE]; // Buffer de resposta
 
     int ativo;
 
-    if (argc != 2) {
-        fprintf(stderr,"usage: client hostname\n");
+    
+    if (argc <= 2) {
+        fprintf(stderr,"usage: client hostname usertype\n");
         exit(1);
+    }
+
+    if (argc == 3) {
+      if ((strcmp(argv[2],"library") == 0)) {
+        isClientLibrary = 1;
+      }
     }
   
     // hints define o tipo de endereço que estamos procurando no getaddrinfo
@@ -192,14 +190,14 @@ int main(int argc, char* argv[]) {
     // }
     // printf("%s \n", buf);
 
+    printMenu(isClientLibrary);
+
     int connected = 1;
     char option[1]; // Armazena opcao escolhida 
-    char buffer[12]; // Buffer para envio de requisicao
+    char buffer[20]; // Buffer para envio de requisicao
     char isbn[10];
     while (connected) {
         
-        printMenu(0);
-
         scanf("%s", &option);
         buffer[0] = (option[0]);
         buffer[1] = '\0';
@@ -217,13 +215,11 @@ int main(int argc, char* argv[]) {
 
             send(sfd, buffer, 12, 0);
 
-
             if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
               perror("recv");
               exit(1);
             }
             listAllBooks(response);
-            getchar();
             break;
 
           //Exibir descrição de um livro
@@ -244,23 +240,76 @@ int main(int argc, char* argv[]) {
 
           //Exibir todas informacoes de um livro
           case '3' :
+            printf("Digite o isbn do LIVRO: ");
+            scanf("%s", isbn);
+            strcat(buffer,isbn);
+
+            send(sfd, buffer, 12, 0);
+
+            if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
+               perror("recv");
+               exit(1);
+            }
+
+            showBookDesc(response);
 
           break;
 
           //Exibir todas informacoes de todos os livros
           case '4' :
+            send(sfd, buffer, 12, 0);
+            if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
+              perror("recv");
+              exit(1);
+            }
+            listAllBooksInfo(response);
+            break;
 
           break;
 
           //Exibir a quantidade de um livro
           case '5' :
+            printf("Digite o isbn do LIVRO: ");
+            scanf("%s", isbn);
+            strcat(buffer,isbn);
+
+            send(sfd, buffer, 12, 0);
+
+            if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
+               perror("recv");
+               exit(1);
+            }
+
+            showBookDesc(response);
 
           break;
 
           //Alterar a quantidade de um livro
           case '6' :
+            printf("Digite o isbn do LIVRO: ");
+            scanf("%s", isbn);
+
+            strcat(buffer,"|");
+            strcat(buffer,isbn);
+            strcat(buffer,"|");
+
+            printf("Digite a nova quantidade: ");
+            scanf("%s", isbn);
+
+            strcat(buffer,isbn);
+            strcat(buffer,"|");
+
+            char str[1];
+            sprintf(str, "%d", isClientLibrary);
+            strcat(buffer,str);
+
+            send(sfd, buffer, 20, 0);
 
           break;
+
+          case 'p' :
+            printMenu(isClientLibrary);
+            break;
 
           default:
             printf("Opção do cliente inválida\n");
