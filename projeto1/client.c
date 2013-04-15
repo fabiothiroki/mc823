@@ -22,7 +22,7 @@
 #define PORT "49152" 
 
 // Numero maximo de bytes que cada resposta pode conter
-#define MAXDATASIZE 10000
+#define MAXDATASIZE 5000
 
 #define REG_SEP '\n'
 #define FIELD_SEP '|'
@@ -44,27 +44,38 @@ void printMenu(int isClientLibrary) {
   printf("******************************************************\n");
 }
 
-void listAllBooks(char response[]) {
+void listAllBooks(char response[]) { 
   char ** temp;
   char ** all_books;
-  char ** id_title_movie;
+  char ** id_isbn_title;
   int i = 0;
 
-  temp = split(response, '#');
+  if (*response != '\0') { 
 
-  int len = atoi(temp[0]);
-  all_books = split(temp[1], '\n');
+    temp = split(response, '#');
+
+    int len = atoi(temp[0]); 
+    all_books = split(temp[1], '\n');
 
 
-  for(i = 0; i < len; i++) {
-    id_title_movie = split(all_books[i], '|');
-    
-    printf("%s | %s\n", id_title_movie[0], id_title_movie[1]);
+    for(i = 0; i < len; i++) {
+      id_isbn_title = split(all_books[i], '|');
+      
+      printf("%s | %s\n", id_isbn_title[0], id_isbn_title[1]);
 
-    free(id_title_movie);
+      free(id_isbn_title);
+    }
+    free(all_books);
+    free(temp);
+
   }
-  free(all_books);
   
+}
+
+void showBookDesc(char response[]){
+
+  printf("%s \n", response);
+
 }
 
 /**
@@ -126,7 +137,6 @@ int main(int argc, char* argv[]) {
 
     
     char response[MAXDATASIZE]; // Buffer de resposta
-    char aux[3];
 
     int ativo;
 
@@ -175,19 +185,17 @@ int main(int argc, char* argv[]) {
 
     freeaddrinfo(result); // all done with this structure
     
-    char buf[100]; int numbytes;
-
-    if ((numbytes=recv(sfd, buf, 100, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
-
-    // welcome message
-    printf("%s \n", buf);
+    // char buf[100]; int numbytes;
+    // if ((numbytes=recv(sfd, buf, 100, 0)) == -1) {
+    //     perror("recv");
+    //     exit(1);
+    // }
+    // printf("%s \n", buf);
 
     int connected = 1;
     char option[1]; // Armazena opcao escolhida 
-    char buffer[6]; // Buffer para envio de requisicao
+    char buffer[12]; // Buffer para envio de requisicao
+    char isbn[10];
     while (connected) {
         
         printMenu(0);
@@ -200,27 +208,39 @@ int main(int argc, char* argv[]) {
 
           // Sair
           case '0' :
-            send(sfd, buffer, 6, 0);
+            send(sfd, buffer, MAXDATASIZE, 0);
             connected = 0;
             break;
 
           //Listar ISBN e título de todos os livros
           case '1' :
-            send(sfd, buffer, 6, 0);
-            // recv(sfd, response, MAXDATASIZE, 0);
+
+            send(sfd, buffer, 12, 0);
+
 
             if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
               perror("recv");
               exit(1);
             }
-            
             listAllBooks(response);
+            getchar();
             break;
 
           //Exibir descrição de um livro
           case '2' :
+            printf("Digite o isbn do LIVRO: ");
+            scanf("%s", isbn);
+            strcat(buffer,isbn);
 
-          break;
+            send(sfd, buffer, 12, 0);
+
+            if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
+               perror("recv");
+               exit(1);
+            }
+
+            showBookDesc(response);
+            break;
 
           //Exibir todas informacoes de um livro
           case '3' :

@@ -13,9 +13,9 @@
 #define PORT "49152"  
 #define BACKLOG 10
 
-// mensagem contendo o request do cliente
-// contem a opcao do cliente, id do livro e o id do usuario
-char msg[4];    
+#define MAXDATASIZE 5000
+
+ 
 
 typedef struct bookStruct {
   char isbn[11];        
@@ -64,7 +64,8 @@ void loadBooks(){
 
      }
 
-     numberBooks = i;
+    numberBooks = i;
+    sqlite3_close(conn);
 
 }
 
@@ -73,10 +74,10 @@ void loadBooks(){
 
 void listarTodosLivros(int new_fd) {
 
+    int i;
     int buffer_size = 1000;
 
     char buffer[buffer_size];
-    int i;
 
     buffer[0] = '\0';
 
@@ -94,8 +95,34 @@ void listarTodosLivros(int new_fd) {
 
     printf("buffer: %s \n",buffer);
 
-    send(new_fd, buffer, buffer_size, 0);
+    send(new_fd, buffer, MAXDATASIZE, 0);
 }
+
+void getBookDescByIsbn(int new_fd, char opt[]) {
+
+
+    char buffer[MAXDATASIZE];
+    char opt2[11];
+
+    int i;
+
+    for (i=0;i<10;i++) {
+        opt2[i] = opt[i+1];
+    }
+
+    buffer[0] = '\0';
+    for (i=0;i<numberBooks;i++) {
+        if (atoi(opt2) == atoi(arr_books[i].isbn)) {
+            strcat(buffer,arr_books[i].description);
+        }
+    }
+
+  // strcat(buffer, filmes[atoi(opt2)-1].sinopse);
+  // strcat(buffer, REG_SEP);
+  
+    send(new_fd, buffer, MAXDATASIZE, 0);
+}
+
 
 // Mata todos os processos zumbis
 void sigchld_handler(int s) {
@@ -193,6 +220,10 @@ int main(void) {
 
     printf("SERVER -> waiting connections from clients...\n");
 
+    // mensagem contendo o request do cliente
+    // contem a opcao do cliente, id do livro e o id do usuario
+    char msg[12];   
+
     while(1) {
         // accept(): responsável por aceitar uma conexão em socket
         sin_size = sizeof their_addr;
@@ -208,23 +239,24 @@ int main(void) {
 
             close(sfd); 
 
-            char welcome[] = "Seja bem vindo ao catalogo de livros!\n";
-            if (send(new_fd, welcome, sizeof(welcome), 0) == -1) {
-                perror("send");
-                exit(0);
-            }
+            // char welcome[] = "Seja bem vindo ao catalogo de livros!\n";
+            // if (send(new_fd, welcome, sizeof(welcome), 0) == -1) {
+            //     perror("send");
+            //     exit(0);
+            // }
 
             connected = 1;
             while(connected){
 
                 //recv(): recebe dados em um socket
-                if(recv(new_fd,msg, 4, 0) == -1) {
+                if(recv(new_fd,msg, 12, 0) == -1) {
                     perror("ERROR: recv");
                 }
 
-                else {
 
-                    
+                else if (*msg != '\0') {
+                    printf("msg: %s \n",msg);
+
                     switch(msg[0]){
 
                         case '0':
@@ -233,18 +265,19 @@ int main(void) {
                           break;
 
                         case '1':
+                            // Listar ISBN e título de todos os livros
+                            listarTodosLivros(new_fd);
+                            break;
 
-                          // Listar ISBN e título de todos os livros
-                          listarTodosLivros(new_fd);
-
-                          
-                          break;
+                        case '2':
+                            //Exibir descrição de um livro
+                            getBookDescByIsbn(new_fd,msg);
+                            break;
 
                         default:
 
-                          printf("opt: %c",msg[0]);
-                          fflush(stdout);
-                          printf("Opcao inválida\n");
+                          // printf("opt: %c",msg[0]);
+                          // printf("Opcao do servidor inválida\n");
                           break;
                     }
 
