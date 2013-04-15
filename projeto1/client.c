@@ -14,7 +14,6 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-
 #include <arpa/inet.h>
 
 #include "aux_functions.h"
@@ -23,14 +22,14 @@
 #define PORT "49152" 
 
 // Numero maximo de bytes que cada resposta pode conter
-#define MAXDATASIZE 4486
+#define MAXDATASIZE 10000
 
 #define REG_SEP '\n'
 #define FIELD_SEP '|'
 
 #define NUMBER_MOVIES 13
 
-void printMenu(bool isClientLibrary) {
+void printMenu(int isClientLibrary) {
   printf("\n\n******************************************************\n");
   printf("Catálogo de livros! Entre com uma das opções abaixo e pressione ENTER\n\n");
   printf("0 - Sair\n");
@@ -38,36 +37,33 @@ void printMenu(bool isClientLibrary) {
   printf("2 - Exibir descrição de um livro\n");
   printf("3 - Exibir todas informacoes de um livro\n");
   printf("4 - Exibir todas informacoes de todos os livros\n");
-  printf("5 - Exibir a quantidade de um livro");
+  printf("5 - Exibir a quantidade de um livro\n");
   if (isClientLibrary) {
-    printf("6 - Alterar a quantidade de um livro");
+    printf("6 - Alterar a quantidade de um livro\n");
   }
   printf("******************************************************\n");
 }
 
-/**
- * Lista o id e o titulo de todos os filmes
- *
- * @param response buffer preenchido com a resposta enviada pelo servidor
- */
-void listAllMovies(char response[]) {
-  char ** all_movies;
+void listAllBooks(char response[]) {
+  char ** temp;
+  char ** all_books;
   char ** id_title_movie;
   int i = 0;
 
-  printf("ID   |TITULO                   \n");
+  temp = split(response, '#');
 
-  all_movies = split(response, REG_SEP);
+  int len = atoi(temp[0]);
+  all_books = split(temp[1], '\n');
 
 
-  for(i = 0; i < NUMBER_MOVIES; i++) {
-    id_title_movie = split(all_movies[i], FIELD_SEP);
+  for(i = 0; i < len; i++) {
+    id_title_movie = split(all_books[i], '|');
     
-    printf("%5s| %25s\n", id_title_movie[0], id_title_movie[1]);
+    printf("%s | %s\n", id_title_movie[0], id_title_movie[1]);
 
     free(id_title_movie);
   }
-  free(all_movies);
+  free(all_books);
   
 }
 
@@ -128,8 +124,7 @@ int main(int argc, char* argv[]) {
     int rv;
     char s[INET6_ADDRSTRLEN];
 
-    char option = '0';          // Armazena opcao escolhida 
-    char buffer[6];             // Buffer para envio de requisicao
+    
     char response[MAXDATASIZE]; // Buffer de resposta
     char aux[3];
 
@@ -163,9 +158,6 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        // if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
-            // break;                  /* Success */
-
         if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
             close(sfd);
             perror("client: connect");
@@ -194,15 +186,17 @@ int main(int argc, char* argv[]) {
     printf("%s \n", buf);
 
     int connected = 1;
+    char option[1]; // Armazena opcao escolhida 
+    char buffer[6]; // Buffer para envio de requisicao
     while (connected) {
         
         printMenu(0);
 
-        scanf("%c", &option);
-        buffer[0] = option;
+        scanf("%s", &option);
+        buffer[0] = (option[0]);
         buffer[1] = '\0';
 
-        switch ( option ) {
+        switch ( buffer[0] ) {
 
           // Sair
           case '0' :
@@ -212,8 +206,16 @@ int main(int argc, char* argv[]) {
 
           //Listar ISBN e título de todos os livros
           case '1' :
+            send(sfd, buffer, 6, 0);
+            // recv(sfd, response, MAXDATASIZE, 0);
 
-          break;
+            if (recv(sfd, response, MAXDATASIZE, 0) == -1) {
+              perror("recv");
+              exit(1);
+            }
+            
+            listAllBooks(response);
+            break;
 
           //Exibir descrição de um livro
           case '2' :
@@ -241,18 +243,17 @@ int main(int argc, char* argv[]) {
           break;
 
           default:
-            printf("Opção inválida");
-            getchar();
+            printf("Opção do cliente inválida\n");
             break;
           }
-        }
+    }
         close(sfd);
 
         return 0;
     }
 
-      
-  ativo = 0;
+    /* 
+  int ativo = 0;
   while(ativo) {
 
     scanf("%c", &option);
@@ -318,3 +319,4 @@ int main(int argc, char* argv[]) {
   
   return 0;
 }
+*/
