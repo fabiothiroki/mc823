@@ -279,14 +279,12 @@ int main(int argc, char * argv[]) {
 
   int rv, numbytes;
 
+  int yes = 1;
 
   char buf[MAXDATASIZE];
   size_t addr_len;
   char s[INET6_ADDRSTRLEN];
   int i=0;
-
-  // status da conexao
-  int connected; 
 
   clock_t start, end;
   double elapsed, t1, t2;
@@ -296,42 +294,52 @@ int main(int argc, char * argv[]) {
   loadBooks();		               
   
   // hints define o tipo de endereço que estamos procurando no getaddrinfo
+  // get host info, make socket, bind it to port 49152
   memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC;
+  hints.ai_family = AF_UNSPEC; // use IPv4 or IPv6, whichever
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE;
   
   /* getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints". */
-    if ((getaddrinfo(NULL, PORT, &hints, &result)) != 0) {
-        perror("getaddrinfo");
-        exit(0);
-    }
+  if ((getaddrinfo(NULL, PORT, &hints, &result)) != 0) {
+    perror("getaddrinfo");
+    exit(0);
+  }
   
-  // Percorre a lista ligada e realiza 'bind' ao primeiro que for
-  // possivel
-  for(p = servinfo; p != NULL; p = p->ai_next) {
-    if ((sockfd = socket(p->ai_family, p->ai_socktype,
-			 p->ai_protocol)) == -1) {
-      perror("listener: socket");
-      continue;
-    }
+   // Percorre todos os endereços encontrados no getaddrinfo
+   // Faz o "bind" para o primeiro socket criado com sucesso
+   for (rp = result; rp != NULL; rp = rp->ai_next) {
 
-    if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-      close(sockfd);
-      perror("listener: bind");
-      continue;
-    }
-    
-    break;
-  }
+      // socket() retorna um inteiro similar a um descritor de arquivos relacionado ao socket criado, 
+      // através do qual ele pode ser referenciado
+      sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+      if (sfd == -1) {
+        perror("server: socket");
+        continue;
+      }
+
+      if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+        perror("setsockopt");
+        exit(1);
+      }
+
+      // bind() associa uma porta para o socket
+      if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
+        close(sfd);
+        perror("server: bind");
+        continue;
+      }
+
+      break;
+  }   
   
-  if (p == NULL)  {
-    fprintf(stderr, "listener: falha ao realizar 'bind'\n");
-    return 2;
+  if (rp == NULL) {
+    /* No address succeeded */              
+    perror("Could not bind\n");
+    exit(0);
   }
-  
-  // Necessario devido à chamada 'getaddrinfo' acima
-  freeaddrinfo(servinfo); 
+
+  freeaddrinfo(result);
   
   printf("listener: esperando chamada 'recvfrom'...\n");
 
@@ -350,160 +358,163 @@ int main(int argc, char * argv[]) {
   
   while(connected){
 	
-	// Recebe a opcao do client
-	addr_len = sizeof their_addr;
-    if ((numbytes = recvfrom(sockfd, opt, MAXBUFLEN , 0,
-        (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+	  // Recebe a opcao do client
+	  //addr_len = sizeof their_addr;
+
+    socklen_t fromlen;
+    fromlen = sizeof their_addr;
+
+    if ((numbytes = recvfrom(sfd, msg, 15 , 0, (struct sockaddr *)&their_addr, &fromlen)) == -1) {
         perror("recvfrom");
         exit(1);
     } 
     else {
 	  
-	  switch(opt[0]){
-	  case '1':			 
-	    // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+  	  switch(msg[0]){
+    	  case '1':			 
+    	    // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Listar todos os Ids dos filmes com seus respectivos
-	    // titulos
-	    // getAllMovieTitles(sockfd, their_addr, addr_len); 
-	    
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Listar todos os Ids dos filmes com seus respectivos
+    	    // titulos
+    	    // getAllMovieTitles(sockfd, their_addr, addr_len); 
+    	    
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_1.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_1.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
 
-	    break;
-	    
-	  case '2': 
-	    // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+    	    break;
+    	    
+    	  case '2': 
+    	    // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Dado o Id de um filme, retornar a sinopse
-	    // getMovieSynById(sockfd, opt, their_addr, addr_len);  
+    	    // Dado o Id de um filme, retornar a sinopse
+    	    // getMovieSynById(sockfd, opt, their_addr, addr_len);  
 
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_2.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_2.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
 
-	    break;
-	    
-	  case '3':
-	    // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+    	    break;
+    	    
+    	  case '3':
+    	    // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Dado o Id de um filme, retornar todas as informações
-	    // desse filme
-	    // getMovieById(sockfd, opt, their_addr, addr_len);
+    	    // Dado o Id de um filme, retornar todas as informações
+    	    // desse filme
+    	    // getMovieById(sockfd, opt, their_addr, addr_len);
 
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_3.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
-	    break;
-	    
-	  case '4':
-	     // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_3.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
+    	    break;
+    	    
+    	  case '4':
+    	     // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Listar todas as informações de todos os filmes;			  
-	    // getAllMovies(sockfd, their_addr, addr_len);
+    	    // Listar todas as informações de todos os filmes;			  
+    	    // getAllMovies(sockfd, their_addr, addr_len);
 
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_4.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_4.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
 
-	    break;
-	    
-	  case '5':
-	     // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+    	    break;
+    	    
+    	  case '5':
+    	     // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Dar nota a um filme e atualizar sua media		  
-	    // rateMovieById(sockfd, opt, their_addr, addr_len);
+    	    // Dar nota a um filme e atualizar sua media		  
+    	    // rateMovieById(sockfd, opt, their_addr, addr_len);
 
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_5.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_5.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
 
-	    break;
-	    
-	  case '6':
-	     // Registra tempo antes de processar a requisicao	    
-	    gettimeofday(&tv1, NULL);
-	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+    	    break;
+    	    
+    	  case '6':
+    	     // Registra tempo antes de processar a requisicao	    
+    	    gettimeofday(&tv1, NULL);
+    	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-	    // Retorna a nota de um filme e quantos clientes votaram		  
-	    // getRatingById(sockfd, opt, their_addr, addr_len);
+    	    // Retorna a nota de um filme e quantos clientes votaram		  
+    	    // getRatingById(sockfd, opt, their_addr, addr_len);
 
-	    // Registra tempo apos processar requisicao
-	    gettimeofday(&tv2, NULL);
-	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+    	    // Registra tempo apos processar requisicao
+    	    gettimeofday(&tv2, NULL);
+    	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
 
-	    // Calcula tempo gasto
-	    elapsed = t2 - t1;
-	    
-	    // Armazena resultado em arquivo
-	    // relatorio = fopen("relatorio_6.txt","a+");
-	    // fprintf(relatorio, "%f\n", elapsed);
-	    // fclose(relatorio);
+    	    // Calcula tempo gasto
+    	    elapsed = t2 - t1;
+    	    
+    	    // Armazena resultado em arquivo
+    	    // relatorio = fopen("relatorio_6.txt","a+");
+    	    // fprintf(relatorio, "%f\n", elapsed);
+    	    // fclose(relatorio);
 
-	    break;
-	    
-	  case '7':
-	    // Finaliza conexao
-	    connected  = 0;
-	    break;
-	  default:
-	    printf("Opcao nao valida %c. Tente novamente\n", opt[0]);
-	    break;
+    	    break;
+    	    
+    	  case '7':
+    	    // Finaliza conexao
+    	    connected  = 0;
+    	    break;
+
+    	  default:
+    	    printf("Opcao nao valida %c. Tente novamente\n", msg[0]);
+    	    break;
+  	  }
 	  }
-	  
-	}
   }
-      close(sockfd);
+      close(sfd);
       return 0;
 }
