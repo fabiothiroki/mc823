@@ -344,7 +344,7 @@ int main(int argc, char * argv[]) {
   printf("listener: esperando chamada 'recvfrom'...\n");
 
 
-  return 0;
+//  return 0;
 
   // mensagem contendo o request do cliente
   // contem a opcao do cliente, id do livro e o id do usuario
