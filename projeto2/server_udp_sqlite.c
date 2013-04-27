@@ -275,7 +275,8 @@ int main(int argc, char * argv[]) {
   //informacao de endereco dos conectores
   struct sockaddr_storage their_addr;   
 
-  struct addrinfo hints, *servinfo, *p;
+  struct addrinfo hints, *result  , *rp;
+
   int rv, numbytes;
 
 
@@ -283,31 +284,28 @@ int main(int argc, char * argv[]) {
   size_t addr_len;
   char s[INET6_ADDRSTRLEN];
   int i=0;
-  int ativo; // Booleano que indica se a conexao deve continuar ativa
+
+  // status da conexao
+  int connected; 
 
   clock_t start, end;
   double elapsed, t1, t2;
   struct timeval tv1, tv2;
 
-  // arquivo que armazenara os tempos de processamento de requisicao
-  FILE * relatorio;
-  
-  // Vetor que contera a opcao do cliente (mais o id do filme e a nota dada ao mesmo, se for o
-  // caso)
-  char opt[6];
-
   // Carrega todas as informações do livro do banco de dados
   loadBooks();		               
   
+  // hints define o tipo de endereço que estamos procurando no getaddrinfo
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE;
   
-  if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-    return 1;
-  }
+  /* getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints". */
+    if ((getaddrinfo(NULL, PORT, &hints, &result)) != 0) {
+        perror("getaddrinfo");
+        exit(0);
+    }
   
   // Percorre a lista ligada e realiza 'bind' ao primeiro que for
   // possivel
@@ -339,9 +337,18 @@ int main(int argc, char * argv[]) {
 
 
   return 0;
+
+  // mensagem contendo o request do cliente
+  // contem a opcao do cliente, id do livro e o id do usuario
+  char msg[15];  
+
+  // arquivo que armazenara os tempos de processamento de requisicao
+  FILE * relatorio;
+
+  // status da conexao
+  int connected = 1;  
   
-  ativo = 1;
-  while(ativo){
+  while(connected){
 	
 	// Recebe a opcao do client
 	addr_len = sizeof their_addr;
@@ -488,7 +495,7 @@ int main(int argc, char * argv[]) {
 	    
 	  case '7':
 	    // Finaliza conexao
-	    ativo = 0;
+	    connected  = 0;
 	    break;
 	  default:
 	    printf("Opcao nao valida %c. Tente novamente\n", opt[0]);
