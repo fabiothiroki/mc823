@@ -343,7 +343,7 @@ int main(int argc, char * argv[]) {
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
     if (new_fd == -1) {
-      perror("accept");
+      // perror("accept");
       continue;
     }
     
@@ -359,42 +359,42 @@ int main(int argc, char * argv[]) {
       ativo = 1;
       while(ativo){
 
-	// Recebe a opcao do client
-	if(recv(new_fd,opt, 4, 0) == -1); 
+      	// Recebe a opcao do client
+      	if(recv(new_fd,opt, 4, 0) == -1); 
 
-	perror("recv");
+	      perror("recv");
 
-	switch(opt[0]){
-	case '1':			 
-	  // Listar todos os Ids dos filmes com seus respectivos
-	  // titulos
-	  getAllMovieTitles(new_fd);
-	  break;
- 				
-	case '2': 
-	  // Dado o Id de um filme, retornar a sinopse
-	  getMovieSynById(new_fd, opt);  
-	  break;
+	       switch(opt[0]){
+  	case '1':			 
+  	  // Listar todos os Ids dos filmes com seus respectivos
+  	  // titulos
+  	  getAllMovieTitles(new_fd);
+  	  break;
+   				
+  	case '2': 
+  	  // Dado o Id de um filme, retornar a sinopse
+  	  getMovieSynById(new_fd, opt);  
+  	  break;
 
-	case '3':			  
-	  // Dado o Id de um filme, retornar todas as informações
-	  // desse filme
-	  getMovieById(new_fd, opt);
-	  break;
+  	case '3':			  
+  	  // Dado o Id de um filme, retornar todas as informações
+  	  // desse filme
+  	  getMovieById(new_fd, opt);
+  	  break;
 
-	case '4':
-	  // Listar todas as informações de todos os filmes;			  
-	   getAllMovies(new_fd);
-	  break;
+  	case '4':
+  	  // Listar todas as informações de todos os filmes;			  
+  	   getAllMovies(new_fd);
+  	  break;
 
-	case '5':
-	  // Finaliza conexao
-	  ativo = 0;
-	  break;
-	default:
-	  printf("Opcao nao valida. Tente novamente\n");
-	  break;
-	}
+  	case '5':
+  	  // Finaliza conexao
+  	  ativo = 0;
+  	  break;
+  	default:
+  	  printf("Opcao nao valida. Tente novamente\n");
+  	  break;
+	       }
       }
       close(new_fd);
       exit(0);
