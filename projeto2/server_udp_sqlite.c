@@ -146,7 +146,7 @@ void getAllBooksInfo (int new_fd, struct sockaddr_storage their_addr, int addr_l
 }
 
 
-void getAllInfo(int new_fd, char opt[]) {
+void getAllInfo(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -174,33 +174,7 @@ void getAllInfo(int new_fd, char opt[]) {
         }
     }
 
-    sendto(sockfd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
-}
-
-void getMovieById(int sockfd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
-  char buffer[MAXDATASIZE];
-  char opt2[3];
-  int index_movie;
-    
-  opt2[0] = opt[1];
-  opt2[1] = opt[2];
-  opt2[2] = END_STRING;
-
-  index_movie = atoi(opt2) - 1;
-
-  buffer[0] = END_STRING;
-
-  strcat(buffer, filmes[index_movie].id);
-  strcat(buffer, FIELD_SEP);
-  strcat(buffer, filmes[index_movie].titulo);
-  strcat(buffer, FIELD_SEP);
-  strcat(buffer, filmes[index_movie].sinopse);
-  strcat(buffer, FIELD_SEP);
-  strcat(buffer, filmes[index_movie].sala);
-  strcat(buffer, FIELD_SEP);
-  strcat(buffer, filmes[index_movie].horarios);
-  
-  sendto(sockfd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
+    sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
 void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
@@ -220,11 +194,11 @@ void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_storage their_add
         }
     }
   
-  sendto(sockfd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
+  sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
 
-void getBookQuant(int new_fd, char opt[]) {
+void getBookQuant(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -241,7 +215,7 @@ void getBookQuant(int new_fd, char opt[]) {
         }
     }
   
-    sendto(sockfd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
+    sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
 void setBookQuant(int new_fd, char opt[]) {
@@ -293,31 +267,19 @@ void setBookQuant(int new_fd, char opt[]) {
     }
 }
 
-
-/**
- * Define se o sockaddr é IPv4 ou IPv6
- *
- * @param sa socket
- */
-void *get_in_addr(struct sockaddr *sa) {
-
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-/**
- * Principal
- */
 int main(int argc, char * argv[]) {
-  int sockfd;	
+
+  // File descriptors do socket
+  int sfd;
+
+  //informacao de endereco dos conectores
+  struct sockaddr_storage their_addr;   
+
   struct addrinfo hints, *servinfo, *p;
   int rv, numbytes;
-  //informacao de endereco dos conectores
-  struct sockaddr_storage their_addr;
-  char buf[MAXBUFLEN];
+
+
+  char buf[MAXDATASIZE];
   size_t addr_len;
   char s[INET6_ADDRSTRLEN];
   int i=0;
@@ -332,48 +294,10 @@ int main(int argc, char * argv[]) {
   
   // Vetor que contera a opcao do cliente (mais o id do filme e a nota dada ao mesmo, se for o
   // caso)
-  char opt[6];		                
+  char opt[6];
 
-  // Array que armazenara cada linha do arquivo de filmes, para tratar
-  // cada campos posteriormente
-  char * lineRead;
-
-  // Matriz onde cada posicao equivale a um campo de um registro do
-  // arquivo de filmes
-  char ** matrixConfig;
-  
-  // Carrega todos os filmes contidos no arquivo 'movies.txt' para a
-  // memoria (total de 13 filmes)
-  FILE *arqFilmes = NULL;
-
-  arqFilmes = fopen("movies.txt","r");
-  
-  // Le a primeira linha do arquivo de filmes
-  lineRead = readFileBySeparator(arqFilmes, '\n');
- 
-  // Para cada linha do arquivo (que corresponde a um filme) separa os
-  // campos e usa cada um deles para preencher a estrutura de filmes
-  // adequadamente
-  while(lineRead != NULL) {
-    
-    matrixConfig = split(lineRead, '|');
-
-    strcpy(filmes[i].id, matrixConfig[0]);
-    strcpy(filmes[i].titulo, matrixConfig[1]);
-    strcpy(filmes[i].sinopse, matrixConfig[2]);
-    strcpy(filmes[i].sala, matrixConfig[3]);
-    strcpy(filmes[i].horarios, matrixConfig[4]);
-    i++;
-
-    free(matrixConfig);
-
-    lineRead = readFileBySeparator(arqFilmes, '\n');
-   }
-
-  free(lineRead);
-
-  fclose(arqFilmes);
-  //fim do carregamento de filmes
+  // Carrega todas as informações do livro do banco de dados
+  loadBooks();		               
   
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
@@ -413,19 +337,6 @@ int main(int argc, char * argv[]) {
   
   printf("listener: esperando chamada 'recvfrom'...\n");
 
-  
-
-  /*
-  printf("listener: got packet from %s\n",
-      inet_ntop(their_addr.ss_family,
-          get_in_addr((struct sockaddr *)&their_addr),
-          s, sizeof s));
-  printf("listener: packet is %d bytes long\n", numbytes);
-  buf[numbytes] = '\0';
-  printf("listener: packet contains \"%s\"\n", buf);
-  */
-  
-  
 
   return 0;
   
@@ -449,7 +360,7 @@ int main(int argc, char * argv[]) {
 
 	    // Listar todos os Ids dos filmes com seus respectivos
 	    // titulos
-	    getAllMovieTitles(sockfd, their_addr, addr_len); 
+	    // getAllMovieTitles(sockfd, their_addr, addr_len); 
 	    
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -459,9 +370,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_1.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_1.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 
 	    break;
 	    
@@ -471,7 +382,7 @@ int main(int argc, char * argv[]) {
 	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
 	    // Dado o Id de um filme, retornar a sinopse
-	    getMovieSynById(sockfd, opt, their_addr, addr_len);  
+	    // getMovieSynById(sockfd, opt, their_addr, addr_len);  
 
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -481,9 +392,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_2.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_2.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 
 	    break;
 	    
@@ -494,7 +405,7 @@ int main(int argc, char * argv[]) {
 
 	    // Dado o Id de um filme, retornar todas as informações
 	    // desse filme
-	    getMovieById(sockfd, opt, their_addr, addr_len);
+	    // getMovieById(sockfd, opt, their_addr, addr_len);
 
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -504,9 +415,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_3.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_3.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 	    break;
 	    
 	  case '4':
@@ -515,7 +426,7 @@ int main(int argc, char * argv[]) {
 	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
 	    // Listar todas as informações de todos os filmes;			  
-	    getAllMovies(sockfd, their_addr, addr_len);
+	    // getAllMovies(sockfd, their_addr, addr_len);
 
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -525,9 +436,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_4.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_4.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 
 	    break;
 	    
@@ -537,7 +448,7 @@ int main(int argc, char * argv[]) {
 	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
 	    // Dar nota a um filme e atualizar sua media		  
-	    rateMovieById(sockfd, opt, their_addr, addr_len);
+	    // rateMovieById(sockfd, opt, their_addr, addr_len);
 
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -547,9 +458,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_5.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_5.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 
 	    break;
 	    
@@ -559,7 +470,7 @@ int main(int argc, char * argv[]) {
 	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
 	    // Retorna a nota de um filme e quantos clientes votaram		  
-	    getRatingById(sockfd, opt, their_addr, addr_len);
+	    // getRatingById(sockfd, opt, their_addr, addr_len);
 
 	    // Registra tempo apos processar requisicao
 	    gettimeofday(&tv2, NULL);
@@ -569,9 +480,9 @@ int main(int argc, char * argv[]) {
 	    elapsed = t2 - t1;
 	    
 	    // Armazena resultado em arquivo
-	    relatorio = fopen("relatorio_6.txt","a+");
-	    fprintf(relatorio, "%f\n", elapsed);
-	    fclose(relatorio);
+	    // relatorio = fopen("relatorio_6.txt","a+");
+	    // fprintf(relatorio, "%f\n", elapsed);
+	    // fclose(relatorio);
 
 	    break;
 	    
