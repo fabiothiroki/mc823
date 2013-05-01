@@ -20,27 +20,6 @@
 #define REG_SEP '\n'
 #define FIELD_SEP '|'
 
-#define NUMBER_MOVIES 13
-
-char ** split(char * string, char delim){
-
-  char * pch;
-  char *temp = &delim;
-  char ** vector;
-
-  vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
-
-  pch = strtok (string,temp);
-  int i = 0;
-  while (pch != NULL) {
-    vector[i] = pch;
-    pch = strtok (NULL, temp);
-    i++;
-  }
-  return vector;
-
-}
-
 char **split2(char * string, char delim){
   char* token;
   char* tofree;
@@ -119,13 +98,13 @@ void listAllBooksInfo (char response[]) {
   char ** all_info;
   int i = 0;
 
-  temp = split(response, '#');
+  temp = split2(response, '#');
 
   int len = atoi(temp[0]); 
-  all_books = split(temp[1], '\n');
+  all_books = split2(temp[1], '\n');
 
   for(i = 0; i < len; i++) {
-    all_info = split(all_books[i], '|');
+    all_info = split2(all_books[i], '|');
     
     printf("%s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6]);
 
@@ -289,46 +268,41 @@ int main(int argc, char* argv[]) {
         // fprintf(relatorio, "%f\n", elapsed);
         // fclose(relatorio);
 
-      getchar();
-      break;
-      
-    /*
-    case '2': 
-      // Exibe a sinopse do filme
-      printf("Digite o número do filme: ");
-      scanf("%s", aux);
-      strcat(buffer,aux);
-      buffer[3] = '\0';
+        break;    
+    
+      case '2': 
+        //Exibir descrição de um livro
+        printf("Digite o isbn do LIVRO: ");
+        scanf("%s", isbn);
+        strcat(buffer,isbn);
 
-      //Registra tempo logo apos envio da requisicao, para calcular
-      //tempo total da comunicacao
-      gettimeofday(&tv1, NULL);
-      t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+        //Registra tempo logo apos envio da requisicao, para calcular
+        //tempo total da comunicacao
+        gettimeofday(&tv1, NULL);
+        t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-      size = strlen(buffer);
+        buffersize = strlen(buffer);
 
-      sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
-	
-      printf("\n=======================================================\n");
-      printf("\n\nSINOPSE: %s\n", response);
-      printf("\n=======================================================\n");
+        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+          perror("sendto()");
+        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1)
+          perror("recvfrom()");
 
-      // Registra tempo apos receber requisicao processada
-      gettimeofday(&tv2, NULL);
-      t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
-      
-      // Calcula tempo gasto
-      elapsed = t2 - t1;
-      
-      // Armazena resultado em arquivo
-      relatorio = fopen("relatorio_com_2.txt","a+");
-      fprintf(relatorio, "%f\n", elapsed);
-      fclose(relatorio);
+        gettimeofday(&tv2, NULL);
+        t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+        
+        // Calcula tempo gasto
+        elapsed = t2 - t1;
 
-      getchar();
-      break;
-      
+        showBookDesc(response);
+        
+        // Armazena resultado em arquivo
+        // relatorio = fopen("relatorio_com_2.txt","a+");
+        // fprintf(relatorio, "%f\n", elapsed);
+        // fclose(relatorio);
+
+        break;
+      /*
     case '3': 
       // Exibe todas as informacoes de um filme
       printf("Digite o número do filme: ");

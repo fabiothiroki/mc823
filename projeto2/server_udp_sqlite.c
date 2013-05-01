@@ -119,7 +119,7 @@ void listarTodosLivros(int new_fd, struct sockaddr_in their_addr, int addr_len) 
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
-void getAllBooksInfo (int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
+void getAllBooksInfo (int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
 
     buffer[0] = '\0';
@@ -151,7 +151,7 @@ void getAllBooksInfo (int new_fd, char opt[], struct sockaddr_storage their_addr
 }
 
 
-void getAllInfo(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
+void getAllInfo(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -182,7 +182,7 @@ void getAllInfo(int new_fd, char opt[], struct sockaddr_storage their_addr, int 
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
-void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
+void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -203,7 +203,7 @@ void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_storage their_add
 }
 
 
-void getBookQuant(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
+void getBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -223,7 +223,7 @@ void getBookQuant(int new_fd, char opt[], struct sockaddr_storage their_addr, in
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
-void setBookQuant(int new_fd, char opt[], struct sockaddr_storage their_addr, int addr_len) {
+void setBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
     char ** temp;
     int i;
 
@@ -424,7 +424,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-    	    getBookDescByIsbn(sfd,msg,their_addr, addr_len);
+    	    getBookDescByIsbn(sfd,msg,si_other, slen);
 
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -440,7 +440,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-          getAllInfo(sfd,msg,their_addr, addr_len);
+          getAllInfo(sfd,msg,si_other, slen);
 
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -455,7 +455,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-    	    getAllBooksInfo(sfd,msg,their_addr, addr_len);
+    	    getAllBooksInfo(sfd,msg,si_other, slen);
 
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -471,7 +471,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-    	    getBookQuant(sfd,msg,their_addr, addr_len);
+    	    getBookQuant(sfd,msg,si_other, slen);
 
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -487,7 +487,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-    	    setBookQuant(sfd,msg,their_addr, addr_len);
+    	    setBookQuant(sfd,msg,si_other, slen);
 
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
