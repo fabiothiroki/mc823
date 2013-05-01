@@ -10,4 +10,4 @@ client:
 	gcc -g client_udp.c -o client
 
 clean:
-	rm -rf *.o makefile~ server client server_sqlite
+	rm -rf *.o makefile~ server client server_udq_sqlite

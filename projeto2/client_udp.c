@@ -41,6 +41,33 @@ char ** split(char * string, char delim){
 
 }
 
+char **split2(char * string, char delim){
+  char* token;
+  char* tofree;
+  char ** vector;
+
+  vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
+  char tempdelim[2];
+  tempdelim[0] = delim;
+  tempdelim[1] = '\0';
+
+  int i = 0;
+  if (string != NULL) {
+
+    tofree = string;
+
+    while ((token = strsep(&string, tempdelim)) != NULL) {
+      vector[i] = token;
+      // printf("%s\n", token);
+      i++;
+    }
+
+    // free(tofree);
+  }
+
+  return vector;
+}
+
 void printMenu(int isClientLibrary) {
   printf("\n\n******************************************************\n");
   printf("Catálogo de livros! Entre com uma das opções abaixo e pressione ENTER\n\n");
@@ -65,14 +92,15 @@ void listAllBooks(char response[]) {
 
   if (*response != '\0') { 
 
-    temp = split(response, '#');
+    temp = split2(response, '#');
+
 
     int len = atoi(temp[0]); 
-    all_books = split(temp[1], '\n');
+    all_books = split2(temp[1], '\n');
 
 
     for(i = 0; i < len; i++) {
-      id_isbn_title = split(all_books[i], '|');
+      id_isbn_title = split2(all_books[i], '|');
       
       printf("%s | %s\n", id_isbn_title[0], id_isbn_title[1]);
 
@@ -187,7 +215,7 @@ int main(int argc, char* argv[]) {
       exit(0);
   }*/
 
-  struct sockaddr_in serv_addr;
+  struct sockaddr_in serv_addr,from;
   int slen=sizeof(serv_addr);
 
   if ((sfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
@@ -211,7 +239,7 @@ int main(int argc, char* argv[]) {
   char option[1]; // Armazena opcao escolhida 
   char buffer[20]; // Buffer para envio de requisicao
   char isbn[10];
-  int buffersize = strlen(buffer);
+  int buffersize;
   while(connected) {
 
     scanf("%s", option);
@@ -229,41 +257,42 @@ int main(int argc, char* argv[]) {
         // ativo = 0;
         // break;
 
-        if (sendto(sfd, buffer, 1, 0, (struct sockaddr*)&serv_addr, slen)==-1)
-          perror("sendto()");
+        // if (sendto(sfd, buffer, 1, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+          // perror("sendto()");
 
         connected = 0;
         break;
 
-      /*
       case '1' :
+        // Exibe id e titulo de todos os filmes
 
-      gettimeofday(&tv1, NULL);
-      t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+        gettimeofday(&tv1, NULL);
+        t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+        
+        buffersize = strlen(buffer);
 
-      size = strlen(buffer);
-      
-      // Exibe id e titulo de todos os filmes
-      sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
+        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+          perror("sendto()");
 
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
+        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1)
+          perror("recvfrom()");
 
-      listAllBooks(response);
+        listAllBooks(response);
 
-      // Registra tempo apos receber requisicao processada
-      gettimeofday(&tv2, NULL);
-      t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
-      
-      // Calcula tempo gasto
-      elapsed = t2 - t1;
-      
-      // relatorio = fopen("relatorio_com_1.txt","a+");
-      // fprintf(relatorio, "%f\n", elapsed);
-      // fclose(relatorio);
+        gettimeofday(&tv2, NULL);
+        t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+        
+        // Calcula tempo gasto
+        elapsed = t2 - t1;
+        
+        // relatorio = fopen("relatorio_com_1.txt","a+");
+        // fprintf(relatorio, "%f\n", elapsed);
+        // fclose(relatorio);
 
       getchar();
       break;
       
+    /*
     case '2': 
       // Exibe a sinopse do filme
       printf("Digite o número do filme: ");
@@ -437,6 +466,10 @@ int main(int argc, char* argv[]) {
       getchar();
       break;
     */
+    case 'p' :
+      printMenu(isClientLibrary);
+      break;
+
     default:
       printf("Opção inválida. Digite novamente:");
       getchar();

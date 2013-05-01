@@ -67,7 +67,12 @@ void loadBooks(){
         perror("Can not open database");
     }
 
-     error = sqlite3_prepare_v2(conn, "select title,author,description,publisher,year,quantity,isbn from books order by title",1000, &res, &tail);
+
+    error = sqlite3_prepare_v2(conn, "select title,author,description,publisher,year,quantity,isbn from books order by title",1000, &res, &tail);
+
+    if(error){
+      printf("query");
+    }
 
      int i = 0;
      while (sqlite3_step(res) == SQLITE_ROW) {
@@ -90,7 +95,7 @@ void loadBooks(){
     sqlite3_close(conn);
 }
 
-void listarTodosLivros(int new_fd, struct sockaddr_storage their_addr, int addr_len) {
+void listarTodosLivros(int new_fd, struct sockaddr_in their_addr, int addr_len) {
     int i;
 
     char buffer[MAXDATASIZE];
@@ -392,6 +397,7 @@ int main(int argc, char * argv[]) {
   	  switch(msg[0]){
         case '0':
           // Encerra conexao
+          // Nunca acontece
           connected = 0;
           break;
 
@@ -400,7 +406,7 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv1, NULL);
     	    t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-          listarTodosLivros(sfd,their_addr, addr_len);
+          listarTodosLivros(sfd, si_other, slen);
     	    
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
