@@ -6,11 +6,8 @@ server: aux_functions.o
 server_sqlite:
 	gcc -lsqlite3 server_udp_sqlite.c -o server_udp_sqlite
 
-client: aux_functions.o
-	gcc -g client.c -o client
-
-aux_functions.o:
-	gcc -c aux_functions.c
+client:
+	gcc -g client_udp.c -o client
 
 clean:
 	rm -rf *.o makefile~ server client server_sqlite

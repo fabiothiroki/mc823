@@ -16,8 +16,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#include "aux_functions.h"
-
 // Porta efêmera que o cliente usará para se conectar
 #define PORT "49152" 
 
