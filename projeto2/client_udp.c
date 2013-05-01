@@ -105,8 +105,8 @@ void listAllBooksInfo (char response[]) {
 
   for(i = 0; i < len; i++) {
     all_info = split2(all_books[i], '|');
-    
-    printf("%s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6]);
+
+    printf("%s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6],all_info[7]);
 
     free(all_info);
   }
@@ -283,10 +283,12 @@ int main(int argc, char* argv[]) {
 
         buffersize = strlen(buffer);
 
-        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
           perror("sendto()");
-        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1)
+        }
+        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
           perror("recvfrom()");
+        }
 
         gettimeofday(&tv2, NULL);
         t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -302,27 +304,27 @@ int main(int argc, char* argv[]) {
         // fclose(relatorio);
 
         break;
-      /*
+      
     case '3': 
-      // Exibe todas as informacoes de um filme
-      printf("Digite o número do filme: ");
-      scanf("%s", aux);
-      strcat(buffer,aux);
-      buffer[3] = '\0';
+      //Exibir todas informacoes de um livro
+      printf("Digite o isbn do LIVRO: ");
+      scanf("%s", isbn);
+      strcat(buffer,isbn);
 
-      //Registra tempo logo apos envio da requisicao, para calcular
-      //tempo total da comunicacao
       gettimeofday(&tv1, NULL);
       t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
             
-      size = strlen(buffer);
+      buffersize = strlen(buffer);
 
-      sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
+      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+        perror("sendto()");
+      }
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+        perror("recvfrom()");
+      }
 
-	 findMovieById(response);
+	    showBookDesc(response);
 
-      // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
       t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
       
@@ -330,26 +332,29 @@ int main(int argc, char* argv[]) {
       elapsed = t2 - t1;
       
       // Armazena resultado em arquivo
-      relatorio = fopen("relatorio_com_3.txt","a+");
-      fprintf(relatorio, "%f\n", elapsed);
-      fclose(relatorio);
-      getchar();
+      // relatorio = fopen("relatorio_com_3.txt","a+");
+      // fprintf(relatorio, "%f\n", elapsed);
+      // fclose(relatorio);
+
       break;
       
+    
     case '4':
-       //Registra tempo logo apos envio da requisicao, para calcular
-      //tempo total da comunicacao
+      //Exibir todas informacoes de todos os livros
+
       gettimeofday(&tv1, NULL);
       t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
-      
-      // Exibe todas as informacoes de todos os filmes
-      size = strlen(buffer);
+      buffersize = strlen(buffer);
 
-     sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
+      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+        perror("sendto()");
+      }
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+        perror("recvfrom()");
+      }
 
-      findAllMovies(response);
+      listAllBooksInfo(response);
 
       // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
@@ -359,72 +364,35 @@ int main(int argc, char* argv[]) {
       elapsed = t2 - t1;
       
       // Armazena resultado em arquivo
-      relatorio = fopen("relatorio_com_4.txt","a+");
-      fprintf(relatorio, "%f\n", elapsed);
-      fclose(relatorio);
-      getchar();
+      // relatorio = fopen("relatorio_com_4.txt","a+");
+      // fprintf(relatorio, "%f\n", elapsed);
+      // fclose(relatorio);
+
       break;
 
-	case '5':
-	 // Exibe todas as informacoes de um filme
-      printf("Digite o número do filme: ");
-      scanf("%s", aux);
-      strcat(buffer,aux);
+      
+	  case '5':
+      //Exibir a quantidade de um livro
+      printf("Digite o isbn do LIVRO: ");
+      scanf("%s", isbn);
+      strcat(buffer,isbn);
 
-	printf("Digite a nota:");
-	 scanf("%s", aux);
-	 strcat(buffer,aux);
-      	buffer[5] = '\0';
-       //Registra tempo logo apos envio da requisicao, para calcular
-      //tempo total da comunicacao
+
       gettimeofday(&tv1, NULL);
       t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
       
-      // Exibe todas as informacoes de todos os filmes
-      size = strlen(buffer);
+      buffersize = strlen(buffer);
 
-      sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
-
-	
-	if(response[0] == '1') {
-		printf("Nota enviada e processada com sucesso!\n");
-	}
+      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+        perror("sendto()");
+      }
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+        perror("recvfrom()");
+      }
       
-      // Registra tempo apos receber requisicao processada
-      gettimeofday(&tv2, NULL);
-      t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
-      
-      // Calcula tempo gasto
-      elapsed = t2 - t1;
-      
-      // Armazena resultado em arquivo
-      relatorio = fopen("relatorio_com_4.txt","a+");
-      fprintf(relatorio, "%f\n", elapsed);
-      fclose(relatorio);
-      getchar();
-      break;
 
-	case '6':
-	 printf("Digite o número do filme: ");
-	      scanf("%s", aux);
-	      strcat(buffer,aux);
-
-       //Registra tempo logo apos envio da requisicao, para calcular
-      //tempo total da comunicacao
-      gettimeofday(&tv1, NULL);
-      t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
-
-      
-      // Exibe todas as informacoes de todos os filmes
-      size = strlen(buffer);
-
-     sendto(sockfd, buffer, size, 0, p->ai_addr,  p->ai_addrlen);
-      recvfrom(sockfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len);
-
-	printf("%s\n", response);
-      
+      showBookDesc(response);
 
       // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
@@ -434,12 +402,54 @@ int main(int argc, char* argv[]) {
       elapsed = t2 - t1;
       
       // Armazena resultado em arquivo
-      relatorio = fopen("relatorio_com_4.txt","a+");
-      fprintf(relatorio, "%f\n", elapsed);
-      fclose(relatorio);
-      getchar();
+      // relatorio = fopen("relatorio_com_4.txt","a+");
+      // fprintf(relatorio, "%f\n", elapsed);
+      // fclose(relatorio);
+
       break;
-    */
+
+      
+	  case '6':
+	    //Alterar a quantidade de um livro
+      printf("Digite o isbn do LIVRO: ");
+      scanf("%s", isbn);
+
+      gettimeofday(&tv1, NULL);
+      t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
+
+      
+      strcat(buffer,"|");
+      strcat(buffer,isbn);
+      strcat(buffer,"|");
+
+      printf("Digite a nova quantidade: ");
+      scanf("%s", isbn);
+
+      strcat(buffer,isbn);
+      strcat(buffer,"|");
+
+      char str[1];
+      sprintf(str, "%d", isClientLibrary);
+      strcat(buffer,str);
+      
+      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+        perror("sendto()");
+      }
+
+      // Registra tempo apos receber requisicao processada
+      gettimeofday(&tv2, NULL);
+      t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
+      
+      // Calcula tempo gasto
+      elapsed = t2 - t1;
+      
+      // Armazena resultado em arquivo
+      // relatorio = fopen("relatorio_com_4.txt","a+");
+      // fprintf(relatorio, "%f\n", elapsed);
+      // fclose(relatorio);
+
+      break;
+    
     case 'p' :
       printMenu(isClientLibrary);
       break;

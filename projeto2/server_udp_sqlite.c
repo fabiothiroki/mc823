@@ -144,6 +144,7 @@ void getAllBooksInfo (int new_fd, char opt[], struct sockaddr_in their_addr, int
         strcat(buffer,arr_books[i].year);
         strcat(buffer, "|");
         strcat(buffer,arr_books[i].quantity);
+        strcat(buffer, "|");
         strcat(buffer, "\n");
     }
 
