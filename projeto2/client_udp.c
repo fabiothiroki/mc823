@@ -11,40 +11,31 @@
 
 #include <arpa/inet.h>
 
-
 #define PORT 49152
+#define SERVERPORT "49152"
 
 // Numero maximo de bytes que cada resposta pode conter
 #define MAXDATASIZE 5000
 
-#define REG_SEP '\n'
-#define FIELD_SEP '|'
 
-char **split2(char * string, char delim){
-  char* token;
-  char* tofree;
+char ** split(char * string, char delim){
+
+  char * pch;
+  char *temp = &delim;
   char ** vector;
 
   vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
-  char tempdelim[2];
-  tempdelim[0] = delim;
-  tempdelim[1] = '\0';
 
+  pch = strtok (string,temp);
   int i = 0;
-  if (string != NULL) {
-
-    tofree = string;
-
-    while ((token = strsep(&string, tempdelim)) != NULL) {
-      vector[i] = token;
-      // printf("%s\n", token);
-      i++;
-    }
-
-    // free(tofree);
+  while (pch != NULL) {
+    vector[i] = pch;
+    pch = strtok (NULL, temp);
+    i++;
   }
 
   return vector;
+
 }
 
 void printMenu(int isClientLibrary) {
@@ -71,15 +62,15 @@ void listAllBooks(char response[]) {
 
   if (*response != '\0') { 
 
-    temp = split2(response, '#');
+    temp = split(response, '#');
 
 
     int len = atoi(temp[0]); 
-    all_books = split2(temp[1], '\n');
+    all_books = split(temp[1], '\n');
 
 
     for(i = 0; i < len; i++) {
-      id_isbn_title = split2(all_books[i], '|');
+      id_isbn_title = split(all_books[i], '|');
       
       printf("%s | %s\n", id_isbn_title[0], id_isbn_title[1]);
 
@@ -98,15 +89,15 @@ void listAllBooksInfo (char response[]) {
   char ** all_info;
   int i = 0;
 
-  temp = split2(response, '#');
+  temp = split(response, '#');
 
   int len = atoi(temp[0]); 
-  all_books = split2(temp[1], '\n');
+  all_books = split(temp[1], '\n');
 
   for(i = 0; i < len; i++) {
-    all_info = split2(all_books[i], '|');
+    all_info = split(all_books[i], '|');
 
-    printf("%s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6],all_info[7]);
+    printf("%s | %s | %s | %s | %s | %s | %s\n\n", all_info[0], all_info[1], all_info[2], all_info[3], all_info[4], all_info[5],all_info[6]);
 
     free(all_info);
   }
@@ -134,7 +125,7 @@ int main(int argc, char* argv[]) {
   //informacao de endereco dos conectores
   struct sockaddr_storage their_addr;
 
-  size_t addr_len;
+  socklen_t addr_len=sizeof(their_addr) ;
   
 
   clock_t start, end;
@@ -155,11 +146,12 @@ int main(int argc, char* argv[]) {
     }
   }
   
-  /*
+  
   // hints define o tipo de endereço que estamos procurando no getaddrinfo
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_protocol = IPPROTO_UDP;
   
   // getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints". 
   if ((getaddrinfo(argv[1], SERVERPORT, &hints, &result)) != 0) {
@@ -179,21 +171,22 @@ int main(int argc, char* argv[]) {
           continue;
       }
 
-      if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
-          close(sfd);
-          perror("client: connect");
-          continue;    
-      }
+      // if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
+      //     close(sfd);
+      //     perror("client: connect");
+      //     continue;    
+      // }
 
       break;
   }
 
   if (rp == NULL) {
-       No address succeeded             
+      //No address succeeded             
       printf("Could not bind\n");
       exit(0);
-  }*/
+  }
 
+    /*
   struct sockaddr_in serv_addr,from;
   int slen=sizeof(serv_addr);
 
@@ -210,8 +203,10 @@ int main(int argc, char* argv[]) {
   if (inet_aton(argv[1], &serv_addr.sin_addr)==0) {
       fprintf(stderr, "inet_aton() failed\n");
       exit(1);
-  }
+  }*/
 
+
+  addr_len = sizeof their_addr;
   printMenu(isClientLibrary);
   
   int connected = 1;
@@ -229,8 +224,10 @@ int main(int argc, char* argv[]) {
     printf("buffer: %s \n",buffer);
     
     switch ( buffer[0] ) {
-      // Sair
+      
       case '0' :
+        // Sair
+
         // size = strlen(buffer);
         // send(sockfd, buffer, size, 0);
         // ativo = 0;
@@ -250,10 +247,10 @@ int main(int argc, char* argv[]) {
         
         buffersize = strlen(buffer);
 
-        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1)
+        if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, rp->ai_addrlen)==-1)
           perror("sendto()");
 
-        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1)
+        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len) ==-1)
           perror("recvfrom()");
 
         listAllBooks(response);
@@ -264,9 +261,9 @@ int main(int argc, char* argv[]) {
         // Calcula tempo gasto
         elapsed = t2 - t1;
         
-        // relatorio = fopen("relatorio_com_1.txt","a+");
-        // fprintf(relatorio, "%f\n", elapsed);
-        // fclose(relatorio);
+        relatorio = fopen("relatorio_com_1.txt","a+");
+        fprintf(relatorio, "%f\n", elapsed);
+        fclose(relatorio);
 
         break;    
     
@@ -283,12 +280,11 @@ int main(int argc, char* argv[]) {
 
         buffersize = strlen(buffer);
 
-        if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+        if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, rp->ai_addrlen)==-1)
           perror("sendto()");
-        }
-        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+
+        if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len)==-1)
           perror("recvfrom()");
-        }
 
         gettimeofday(&tv2, NULL);
         t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
@@ -298,10 +294,9 @@ int main(int argc, char* argv[]) {
 
         showBookDesc(response);
         
-        // Armazena resultado em arquivo
-        // relatorio = fopen("relatorio_com_2.txt","a+");
-        // fprintf(relatorio, "%f\n", elapsed);
-        // fclose(relatorio);
+        relatorio = fopen("relatorio_com_2.txt","a+");
+        fprintf(relatorio, "%f\n", elapsed);
+        fclose(relatorio);
 
         break;
       
@@ -316,12 +311,11 @@ int main(int argc, char* argv[]) {
             
       buffersize = strlen(buffer);
 
-      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+      if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, rp->ai_addrlen)==-1)
         perror("sendto()");
-      }
-      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len)==-1)
         perror("recvfrom()");
-      }
 
 	    showBookDesc(response);
 
@@ -331,10 +325,9 @@ int main(int argc, char* argv[]) {
       // Calcula tempo gasto
       elapsed = t2 - t1;
       
-      // Armazena resultado em arquivo
-      // relatorio = fopen("relatorio_com_3.txt","a+");
-      // fprintf(relatorio, "%f\n", elapsed);
-      // fclose(relatorio);
+      relatorio = fopen("relatorio_com_3.txt","a+");
+      fprintf(relatorio, "%f\n", elapsed);
+      fclose(relatorio);
 
       break;
       
@@ -347,12 +340,11 @@ int main(int argc, char* argv[]) {
 
       buffersize = strlen(buffer);
 
-      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+      if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, rp->ai_addrlen)==-1)
         perror("sendto()");
-      }
-      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len)==-1)
         perror("recvfrom()");
-      }
 
       listAllBooksInfo(response);
 
@@ -363,10 +355,9 @@ int main(int argc, char* argv[]) {
       // Calcula tempo gasto
       elapsed = t2 - t1;
       
-      // Armazena resultado em arquivo
-      // relatorio = fopen("relatorio_com_4.txt","a+");
-      // fprintf(relatorio, "%f\n", elapsed);
-      // fclose(relatorio);
+      relatorio = fopen("relatorio_com_4.txt","a+");
+      fprintf(relatorio, "%f\n", elapsed);
+      fclose(relatorio);
 
       break;
 
@@ -384,12 +375,11 @@ int main(int argc, char* argv[]) {
       
       buffersize = strlen(buffer);
 
-      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
+      if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, rp->ai_addrlen)==-1)
         perror("sendto()");
-      }
-      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&from, &slen)==-1) {
+
+      if (recvfrom(sfd, response, MAXDATASIZE , 0, (struct sockaddr *)&their_addr, &addr_len)==-1)
         perror("recvfrom()");
-      }
       
 
       showBookDesc(response);
@@ -401,10 +391,9 @@ int main(int argc, char* argv[]) {
       // Calcula tempo gasto
       elapsed = t2 - t1;
       
-      // Armazena resultado em arquivo
-      // relatorio = fopen("relatorio_com_4.txt","a+");
-      // fprintf(relatorio, "%f\n", elapsed);
-      // fclose(relatorio);
+      relatorio = fopen("relatorio_com_5.txt","a+");
+      fprintf(relatorio, "%f\n", elapsed);
+      fclose(relatorio);
 
       break;
 
@@ -431,10 +420,12 @@ int main(int argc, char* argv[]) {
       char str[1];
       sprintf(str, "%d", isClientLibrary);
       strcat(buffer,str);
+
+      buffersize = strlen(buffer);
       
-      if (sendto(sfd, buffer, buffersize, 0, (struct sockaddr*)&serv_addr, slen)==-1) {
-        perror("sendto()");
-      }
+      if (sendto(sfd, buffer, buffersize, 0, rp->ai_addr, addr_len)==-1)
+          perror("sendto()");
+
 
       // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
@@ -443,10 +434,9 @@ int main(int argc, char* argv[]) {
       // Calcula tempo gasto
       elapsed = t2 - t1;
       
-      // Armazena resultado em arquivo
-      // relatorio = fopen("relatorio_com_4.txt","a+");
-      // fprintf(relatorio, "%f\n", elapsed);
-      // fclose(relatorio);
+      relatorio = fopen("relatorio_com_6.txt","a+");
+      fprintf(relatorio, "%f\n", elapsed);
+      fclose(relatorio);
 
       break;
     

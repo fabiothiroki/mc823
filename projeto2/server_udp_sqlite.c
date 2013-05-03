@@ -38,6 +38,33 @@ char ** split(char * string, char delim){
 
 }
 
+char **split2(char * string, char delim){
+  char* token;
+  char* tofree;
+  char ** vector;
+
+  vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
+  char tempdelim[2];
+  tempdelim[0] = delim;
+  tempdelim[1] = '\0';
+
+  int i = 0;
+  if (string != NULL) {
+
+    tofree = string;
+
+    while ((token = strsep(&string, tempdelim)) != NULL) {
+      vector[i] = token;
+      // printf("%s\n", token);
+      i++;
+    }
+
+    // free(tofree);
+  }
+
+  return vector;
+}
+
 typedef struct bookStruct {
   char isbn[11];    
   char title[50];
@@ -144,9 +171,10 @@ void getAllBooksInfo (int new_fd, char opt[], struct sockaddr_in their_addr, int
         strcat(buffer,arr_books[i].year);
         strcat(buffer, "|");
         strcat(buffer,arr_books[i].quantity);
-        strcat(buffer, "|");
         strcat(buffer, "\n");
     }
+
+    printf("buffer: %s \n",buffer);
 
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
@@ -180,6 +208,8 @@ void getAllInfo(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_
         }
     }
 
+    printf("%s \n",buffer);
+
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
 
@@ -205,6 +235,8 @@ void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_in their_addr, in
 
 
 void getBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
+    loadBooks();
+
     char buffer[MAXDATASIZE];
     char opt2[11];
 
@@ -220,6 +252,8 @@ void getBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int add
             strcat(buffer,arr_books[i].quantity);
         }
     }
+
+    printf("%s \n",buffer);
   
     sendto(new_fd, buffer, MAXDATASIZE, 0, (struct sockaddr *)&their_addr, addr_len);
 }
@@ -228,6 +262,7 @@ void setBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int add
     char ** temp;
     int i;
 
+    printf("%s\n",opt);
     temp = split(opt, '|');
 
     
@@ -367,7 +402,7 @@ int main(int argc, char * argv[]) {
   if (bind(sfd, (struct sockaddr* ) &si_me, sizeof(si_me))==-1)
     perror("bind");
   
-  printf("listener: esperando chamada 'recvfrom'...\n");
+  printf("Server: ligado...\n");
 
   // mensagem contendo o request do cliente
   // contem a opcao do cliente, id do livro e o id do usuario
@@ -387,7 +422,7 @@ int main(int argc, char * argv[]) {
     socklen_t fromlen;
     fromlen = sizeof their_addr;
 
-    if ((numbytes = recvfrom(sfd, msg, 15 , 0, (struct sockaddr*)&si_other, &slen)) == -1) {
+    if ((numbytes = recvfrom(sfd, msg, 20 , 0, (struct sockaddr*)&si_other, &slen)) == -1) {
         perror("recvfrom");
         exit(1);
     } 
@@ -414,9 +449,9 @@ int main(int argc, char * argv[]) {
 
     	    elapsed = t2 - t1;
     	    
-    	    // relatorio = fopen("relatorio_1.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_1.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
 
     	    break;
     	    
@@ -430,9 +465,9 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
     	    elapsed = t2 - t1;
-    	    // relatorio = fopen("relatorio_2.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_2.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
 
     	    break;
     	    
@@ -446,9 +481,9 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
     	    elapsed = t2 - t1;
-    	    // relatorio = fopen("relatorio_3.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_3.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
     	    break;
     	    
     	  case '4':
@@ -461,9 +496,9 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
     	    elapsed = t2 - t1;
-    	    // relatorio = fopen("relatorio_4.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_4.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
 
     	    break;
     	    
@@ -477,9 +512,9 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
     	    elapsed = t2 - t1;
-    	    // relatorio = fopen("relatorio_5.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_5.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
 
     	    break;
     	    
@@ -493,9 +528,9 @@ int main(int argc, char * argv[]) {
     	    gettimeofday(&tv2, NULL);
     	    t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
     	    elapsed = t2 - t1;
-    	    // relatorio = fopen("relatorio_6.txt","a+");
-    	    // fprintf(relatorio, "%f\n", elapsed);
-    	    // fclose(relatorio);
+    	    relatorio = fopen("relatorio_6.txt","a+");
+    	    fprintf(relatorio, "%f\n", elapsed);
+    	    fclose(relatorio);
     	    break;
 
     	  default:
