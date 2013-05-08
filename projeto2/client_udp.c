@@ -11,7 +11,6 @@
 
 #include <arpa/inet.h>
 
-#define PORT 49152
 #define SERVERPORT "49152"
 
 // Numero maximo de bytes que cada resposta pode conter
@@ -19,7 +18,7 @@
 
 
 char ** split(char * string, char delim){
-
+  // Função auxiliar que recebe uma string e divide ela em arrays, dado um char separador
   char * pch;
   char *temp = &delim;
   char ** vector;
@@ -117,7 +116,7 @@ int main(int argc, char* argv[]) {
   int sfd;  
   struct addrinfo hints, *result, *rp;
   int rv;
-  char s[INET6_ADDRSTRLEN];
+//  char s[INET6_ADDRSTRLEN];
   int isClientLibrary = 0;
 
   char response[MAXDATASIZE]; // Buffer de resposta
@@ -126,13 +125,12 @@ int main(int argc, char* argv[]) {
   struct sockaddr_storage their_addr;
 
   socklen_t addr_len=sizeof(their_addr) ;
-  
 
   clock_t start, end;
   double elapsed, t1, t2;
   struct timeval tv1, tv2;
 
-  // arquivo que armazenara os tempos de processamento de requisicao
+  // Arquivo onde será salvo os tempos de cada request
   FILE * relatorio;
   
   if (argc <= 2) {
@@ -171,12 +169,6 @@ int main(int argc, char* argv[]) {
           continue;
       }
 
-      // if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
-      //     close(sfd);
-      //     perror("client: connect");
-      //     continue;    
-      // }
-
       break;
   }
 
@@ -186,30 +178,10 @@ int main(int argc, char* argv[]) {
       exit(0);
   }
 
-    /*
-  struct sockaddr_in serv_addr,from;
-  int slen=sizeof(serv_addr);
-
-  if ((sfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
-    perror("socket");
-  }
-  else {
-    printf("Client : Socket() successful\n");
-  }
-
-  bzero(&serv_addr, sizeof(serv_addr));
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(PORT);
-  if (inet_aton(argv[1], &serv_addr.sin_addr)==0) {
-      fprintf(stderr, "inet_aton() failed\n");
-      exit(1);
-  }*/
-
-
   addr_len = sizeof their_addr;
   printMenu(isClientLibrary);
   
-  int connected = 1;
+  int connected = 1; // controla a saída do loop de conexao
   char option[1]; // Armazena opcao escolhida 
   char buffer[20]; // Buffer para envio de requisicao
   char isbn[10];
@@ -227,14 +199,6 @@ int main(int argc, char* argv[]) {
       
       case '0' :
         // Sair
-
-        // size = strlen(buffer);
-        // send(sockfd, buffer, size, 0);
-        // ativo = 0;
-        // break;
-
-        // if (sendto(sfd, buffer, 1, 0, (struct sockaddr*)&serv_addr, slen)==-1)
-          // perror("sendto()");
 
         connected = 0;
         break;
@@ -273,8 +237,6 @@ int main(int argc, char* argv[]) {
         scanf("%s", isbn);
         strcat(buffer,isbn);
 
-        //Registra tempo logo apos envio da requisicao, para calcular
-        //tempo total da comunicacao
         gettimeofday(&tv1, NULL);
         t1 = (double)(tv1.tv_sec) + (double)(tv1.tv_usec)/ 1000000.00;
 
@@ -289,7 +251,6 @@ int main(int argc, char* argv[]) {
         gettimeofday(&tv2, NULL);
         t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
         
-        // Calcula tempo gasto
         elapsed = t2 - t1;
 
         showBookDesc(response);
@@ -322,7 +283,6 @@ int main(int argc, char* argv[]) {
       gettimeofday(&tv2, NULL);
       t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
       
-      // Calcula tempo gasto
       elapsed = t2 - t1;
       
       relatorio = fopen("relatorio_com_3.txt","a+");
@@ -348,7 +308,6 @@ int main(int argc, char* argv[]) {
 
       listAllBooksInfo(response);
 
-      // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
       t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
       
@@ -384,7 +343,6 @@ int main(int argc, char* argv[]) {
 
       showBookDesc(response);
 
-      // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
       t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
       
@@ -427,11 +385,9 @@ int main(int argc, char* argv[]) {
           perror("sendto()");
 
 
-      // Registra tempo apos receber requisicao processada
       gettimeofday(&tv2, NULL);
       t2 = (double)(tv2.tv_sec) + (double)(tv2.tv_usec)/ 1000000.00;
       
-      // Calcula tempo gasto
       elapsed = t2 - t1;
       
       relatorio = fopen("relatorio_com_6.txt","a+");

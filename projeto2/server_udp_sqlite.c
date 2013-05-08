@@ -10,16 +10,12 @@
 #include <time.h>
 
 #define PORT 49152  // porta (efemera) de entrada dos clientes
-#define BACKLOG 10
 
 #define MAXDATASIZE 5000
 
-#define FIELD_SEP "|"
-#define REG_SEP "\n"
-#define END_STRING '\0'
 
 char ** split(char * string, char delim){
-
+  // Função auxiliar que recebe uma string e divide ela em arrays, dado um char separador
   char * pch;
   char *temp = &delim;
   char ** vector;
@@ -36,33 +32,6 @@ char ** split(char * string, char delim){
 
   return vector;
 
-}
-
-char **split2(char * string, char delim){
-  char* token;
-  char* tofree;
-  char ** vector;
-
-  vector = (char **) malloc (sizeof(char *) * MAXDATASIZE);
-  char tempdelim[2];
-  tempdelim[0] = delim;
-  tempdelim[1] = '\0';
-
-  int i = 0;
-  if (string != NULL) {
-
-    tofree = string;
-
-    while ((token = strsep(&string, tempdelim)) != NULL) {
-      vector[i] = token;
-      // printf("%s\n", token);
-      i++;
-    }
-
-    // free(tofree);
-  }
-
-  return vector;
 }
 
 typedef struct bookStruct {
@@ -235,7 +204,6 @@ void getBookDescByIsbn(int new_fd, char opt[], struct sockaddr_in their_addr, in
 
 
 void getBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int addr_len) {
-    loadBooks();
 
     char buffer[MAXDATASIZE];
     char opt2[11];
@@ -302,8 +270,10 @@ void setBookQuant(int new_fd, char opt[], struct sockaddr_in their_addr, int add
         
         sqlite3_finalize(res);
 
+        sqlite3_close(conn); 
 
-        sqlite3_close(conn);                
+        //atualiza quantidade de livros
+        loadBooks();               
 
     }
 }
@@ -313,12 +283,7 @@ int main(int argc, char * argv[]) {
   // File descriptors do socket
   int sfd;
 
-  //informacao de endereco dos conectores
-  struct sockaddr_storage their_addr;   
-
-  struct addrinfo hints, *result  , *rp;
-
-  int rv, numbytes;
+  int numbytes;
 
   int yes = 1;
 
@@ -333,60 +298,11 @@ int main(int argc, char * argv[]) {
 
   // Carrega todas as informações do livro do banco de dados
   loadBooks();		               
-  
-  /*
-  // hints define o tipo de endereço que estamos procurando no getaddrinfo
-  // get host info, make socket, bind it to port 49152
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC; // use IPv4 or IPv6, whichever
-  hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_flags = AI_PASSIVE;
-  
-  // getaddrinfo() retorna uma lista de structs contendo endereços do tipo especificado em "hints".
-  if ((getaddrinfo(NULL, PORT, &hints, &result)) != 0) {
-    perror("getaddrinfo");
-    exit(0);
-  }
-  
-   // Percorre todos os endereços encontrados no getaddrinfo
-   // Faz o "bind" para o primeiro socket criado com sucesso
-   for (rp = result; rp != NULL; rp = rp->ai_next) {
-
-      // socket() retorna um inteiro similar a um descritor de arquivos relacionado ao socket criado, 
-      // através do qual ele pode ser referenciado
-      sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-      if (sfd == -1) {
-        perror("server: socket");
-        continue;
-      }
-
-      if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-        perror("setsockopt");
-        exit(1);
-      }
-
-      // bind() associa uma porta para o socket
-      if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == -1) {
-        close(sfd);
-        perror("server: bind");
-        continue;
-      }
-
-      break;
-  }   
-  
-  if (rp == NULL) {
-    // No address succeeded              
-    perror("Could not bind\n");
-    exit(0);
-  }
-
-  freeaddrinfo(result);
-  */
 
   struct sockaddr_in si_me, si_other;
   int slen=sizeof(si_other);
 
+  // Cria um socket do tipo UDP
   if ((sfd=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1) {
     perror("socket");
   }
@@ -399,6 +315,7 @@ int main(int argc, char * argv[]) {
   si_me.sin_port = htons(PORT);
   si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
+  // bind() associa uma porta para o socket
   if (bind(sfd, (struct sockaddr* ) &si_me, sizeof(si_me))==-1)
     perror("bind");
   
@@ -408,20 +325,15 @@ int main(int argc, char * argv[]) {
   // contem a opcao do cliente, id do livro e o id do usuario
   char msg[15];  
 
-  // arquivo que armazenara os tempos de processamento de requisicao
+  // Arquivo onde será salvo os tempos de cada request
   FILE * relatorio;
 
-  // status da conexao
+  // status da conexao com um cliente
   int connected = 1;  
   
   while(connected){
-	
-	  // Recebe a opcao do client
-	  //addr_len = sizeof their_addr;
 
-    socklen_t fromlen;
-    fromlen = sizeof their_addr;
-
+    // Recebe a opcao do client
     if ((numbytes = recvfrom(sfd, msg, 20 , 0, (struct sockaddr*)&si_other, &slen)) == -1) {
         perror("recvfrom");
         exit(1);
@@ -431,11 +343,6 @@ int main(int argc, char * argv[]) {
       printf("numbytes: %d \n",numbytes);
 
   	  switch(msg[0]){
-        case '0':
-          // Encerra conexao
-          // Nunca acontece
-          connected = 0;
-          break;
 
     	  case '1':			 
           // Listar ISBN e título de todos os livros
