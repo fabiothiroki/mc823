@@ -6,6 +6,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	String thisAddress;
 	Registry registry; // rmi registry for lookup the remote objects.
 	
-//	List<Book> arr_books = null;
+	List<Book> arrBooks = null; // lista onde sera armazenado os livros na memoria
 	List<Movie> movies = null;
 
 	/*
@@ -50,7 +52,10 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 
 	public static void main(String args[]) {
 		try {
-			RmiServer s = new RmiServer();
+			//cria uma nova instancia do servidor com a configuracoes
+			//definidas no construtor
+			RmiServer s = new RmiServer(); 
+			
 			s.loadBooks();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -63,90 +68,80 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	 */
 	public void loadBooks() {
 		
+		arrBooks = new ArrayList<Book>();
+		
+		Connection c = null;
+	    Statement stmt = null;
 		try {
-			Connection c = null;
 			Class.forName("org.sqlite.JDBC");
 			c = DriverManager.getConnection("jdbc:sqlite:database.sqlite");
+//			System.out.println("Opened database successfully");
+			stmt = c.createStatement();
+		    ResultSet rs = stmt.executeQuery( "select title,author,description,publisher,year,quantity,isbn from books order by title;" );
+		    while ( rs.next() ) {
+		    	Book book = new Book();
+		    	
+		    	book.setIsbn(rs.getString("isbn"));
+		    	book.setTitle(rs.getString("title"));
+		    	book.setAuthor(rs.getString("author"));
+		    	book.setDescription(rs.getString("description"));
+		    	book.setPublisher(rs.getString("publisher"));
+		    	book.setYear(rs.getString("publisher"));
+		    	book.setQuantity(rs.getString("quantity"));
+		    	
+		    	arrBooks.add(book);
+		    }
 	    } catch ( Exception e ) {
 	    	System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	    	System.exit(0);
 	    }
-	    System.out.println("Opened database successfully");
-	  
-		
-//		arr_books = new ArrayList<Book>();
-		
-//		try {
-//			FileReader fr = new FileReader("movies.txt");
-//			BufferedReader br = new BufferedReader(fr);
-//			String linha = null;
-//			while((linha = br.readLine()) != null) {
-//				//System.out.println(linha);
-//				String[] movieTokens = linha.split("\\|");
-//				Movie filme = new Movie();
-//				filme.setId(movieTokens[0]);
-//				//System.out.println("id :"+filme.getId());
-//				filme.setTitulo(movieTokens[1]);
-//				//System.out.println("titulo :"+filme.getTitulo());
-//				filme.setSinopse(movieTokens[2]);
-//				//System.out.println("sinopse :"+filme.getSinopse());
-//				filme.setSala(movieTokens[3]);
-//				//System.out.println("sala :"+filme.getSala());
-//				String[] horarios = movieTokens[4].split(" ");
-//				filme.setHorarios(horarios);
-//				//System.out.println("horarios :"+filme.getHorarios());
-//				filme.setMedia(0.0);
-//				filme.setQtdeNotas(0);
-//				movies.add(filme);
-//			}
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	@Override
-	public List<Movie> getAllMovieTitles() throws RemoteException {
+	public List<Book> listarTodosLivros() throws RemoteException {
+		// Listar ISBN e título de todos os livros
+		return arrBooks;
+	}
+
+	@Override
+	public String getBookDescByIsbn(String isbn) throws RemoteException {
+		//Exibir descrição de um livro
+		String resposta = null;
+		if(arrBooks != null) {
+			for (Book book : arrBooks) {
+				if(book.getIsbn().equals(isbn)) {
+					resposta = book.getDescription();
+				}
+			}
+		}
+		return resposta;
+	}
+
+	@Override
+	public Book getAllInfo(String isbn) throws RemoteException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getMovieSynById(String id) throws RemoteException {
+	public List<Book> getAllBooksInfo() throws RemoteException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Movie getMovieById(String id) throws RemoteException {
+	public String getBookQuant(String isbn) throws RemoteException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Movie> getAllMovies() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void rateMovieById(String id, Double rate) throws RemoteException {
+	public void setBookQuant(String isbn) throws RemoteException {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
-	public Double getRatingById(String id) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public Integer getVotersById(String id) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 //	@Override
 //	public List<Movie> getAllMovieTitles()

@@ -3,11 +3,21 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface RMIServerInterface extends Remote {
-	public List<Movie> getAllMovieTitles() throws RemoteException;
-	public String getMovieSynById(String id) throws RemoteException;
-	public Movie getMovieById(String id) throws RemoteException;
-	public List<Movie> getAllMovies() throws RemoteException;
-	public void rateMovieById(String id, Double rate) throws RemoteException;
-	public Double getRatingById(String id) throws RemoteException;
-	public Integer getVotersById(String id) throws RemoteException;
+	// Listar ISBN e título de todos os livros
+	public List<Book> listarTodosLivros() throws RemoteException;
+	
+	//Exibir descrição de um livro
+	public String getBookDescByIsbn(String isbn) throws RemoteException;
+	
+	//Exibir todas informacoes de um livro
+	public Book getAllInfo(String isbn) throws RemoteException;
+	
+	//Exibir todas informacoes de todos os livros
+	public List<Book> getAllBooksInfo() throws RemoteException;
+	
+	//Exibir a quantidade de um livro
+	public String getBookQuant(String isbn) throws RemoteException;
+	
+	//Alterar a quantidade de um livro
+	public void setBookQuant(String isbn) throws RemoteException;
 }

@@ -42,23 +42,21 @@ public class RmiClient {
 		        
 		        while(option != null && !option.trim().isEmpty() && !option.equals("7")) {
 		        	if(option.equals("1")) {
+		        		// Listar ISBN e título de todos os livros
 		        		System.out.println("\n\n");
-		        		// Exibe titulo de todos os filmes
-		        		List<Movie> titulos = rmiServer.getAllMovieTitles();
-		        		System.out.println("********** TITULOS **********");
-		        		System.out.println("* ID\t Titulo");
-		        		for (Movie movie : titulos) {
-							System.out.println("* "+movie.getId()+"\t"+movie.getTitulo());
+		        		List<Book> titulos = rmiServer.listarTodosLivros();
+		        		for (Book book : titulos) {
+							System.out.println(book.getIsbn()+" "+book.getTitle());
 						}
 		        		System.out.println("\n\n");
-		        	} else if (option.equals("2")) {
-		        		// Exibe a sinopse de um dado filme
-		        		info = c.readLine("Digite o ID do filme:");
+		        	} 
+		        	else if (option.equals("2")) {
+		        		//Exibir descrição de um livro
+		        		info = c.readLine("Digite o ISBN do livro:");
 		        		
 		        		String sinopse = null;
 		        		if(info != null && !info.trim().isEmpty()) {
-		        			System.out.println("Pesquisando..."+info);
-		        			sinopse = rmiServer.getMovieSynById(info);
+		        			sinopse = rmiServer.getBookDescByIsbn(info);
 		        			
 		        			if(sinopse != null) {
 		        				System.out.println("SINOPSE : "+sinopse);
@@ -66,77 +64,78 @@ public class RmiClient {
 		        		}
 		        		System.out.println("\n\n");
 		        		
-		        	} else if (option.equals("3")) {
-		        		// Exibe todas as informacoes de um filme
-		        		info = c.readLine("Digite o ID do filme:");
-		        		
-		        		Movie movie = new Movie();
-		        		if(info != null && !info.trim().isEmpty()){
-		        			System.out.println("Pesquisando..."+info);
-		        			movie = rmiServer.getMovieById(info);
-		        			
-		        			if(movie != null) {
-								System.out.println("*** ID: "+movie.getId());
-								System.out.println("*** TITULO: "+movie.getTitulo());
-								System.out.println("*** SINOPSE: "+movie.getSinopse());
-								System.out.println("*** SALA: "+movie.getSala());
-								String horarios = "";
-								for(int i=0; i<movie.getHorarios().length-1; i++)
-									horarios += movie.getHorarios()[i] + " / ";
-								horarios += movie.getHorarios()[movie.getHorarios().length-1];
-								System.out.println("*** HORARIOS: " + horarios);
-								System.out.println("*** MEDIA: "+movie.getMedia());
-								System.out.println("*** QUANTIDADE DE NOTAS: "+movie.getQtdeNotas());
-							}	
-		        		}	
-		        		System.out.println("\n\n"); 		
-		        	} else if (option.equals("4")) {
-		        		// Mostra todas as informacoes de todos os filmes
-		        		List<Movie> movies = rmiServer.getAllMovies();
-		        		Iterator iter = movies.iterator();
-		        		while(iter.hasNext()){
-		        			Movie movie = (Movie)iter.next();
-			        		System.out.println("--------------------------------------------------------------------------------");
-		        			System.out.println("*** ID: "+movie.getId());
-							System.out.println("*** TITULO: "+movie.getTitulo());
-							System.out.println("*** SINOPSE: "+movie.getSinopse());
-							System.out.println("*** SALA: "+movie.getSala());
-							String horarios = "";
-							for(int i=0; i<movie.getHorarios().length-1; i++)
-								horarios += movie.getHorarios()[i] + " / ";
-							horarios += movie.getHorarios()[movie.getHorarios().length-1];
-							System.out.println("*** HORARIOS: " + horarios);
-							System.out.println("*** MEDIA: "+movie.getMedia());
-							System.out.println("*** QUANTIDADE DE NOTAS: "+movie.getQtdeNotas());
-		        			System.out.println("--------------------------------------------------------------------------------\n");
-			        	}
-			        	System.out.println("\n\n");
-		        	} else if(option.equals("5")) {
-		        		// Atribui nota a um dado filme
-		        		String id, nota;
-		        		id = c.readLine("Digite o ID do filme:");
-		        		nota = c.readLine("Digite a nota:");
-		        		if( (id != null && !id.trim().isEmpty()) &&
-		        				(nota != null && !nota.trim().isEmpty()) )	{
-		        			Double rate = Double.valueOf(nota);
-		        			rmiServer.rateMovieById(id, rate);
-		        		}
-		        		System.out.println("Media atribuida com sucesso!");
-		        		System.out.println("\n\n");
-		        	} else if(option.equals("6")) {
-		        		// Exibe a media atual de um dado filme
-		        		info = c.readLine("Digite o ID do filme:");
-		        		
-		        		Double rating = 0.0;
-		        		Integer voters = 0;
-		        		
-		        		if(info != null && !info.trim().isEmpty()){
-		        			rating = rmiServer.getRatingById(info);
-		        			voters = rmiServer.getVotersById(info);
-		        		}
-		        		System.out.println("***MEDIA: " + rating);
-		        		System.out.println("***NUMERO DE CLIENTES QUE VOTARAM: " + voters);
-		        	}
+		        	} 
+//		        	else if (option.equals("3")) {
+//		        		// Exibe todas as informacoes de um filme
+//		        		info = c.readLine("Digite o ID do filme:");
+//		        		
+//		        		Movie movie = new Movie();
+//		        		if(info != null && !info.trim().isEmpty()){
+//		        			System.out.println("Pesquisando..."+info);
+//		        			movie = rmiServer.getMovieById(info);
+//		        			
+//		        			if(movie != null) {
+//								System.out.println("*** ID: "+movie.getId());
+//								System.out.println("*** TITULO: "+movie.getTitulo());
+//								System.out.println("*** SINOPSE: "+movie.getSinopse());
+//								System.out.println("*** SALA: "+movie.getSala());
+//								String horarios = "";
+//								for(int i=0; i<movie.getHorarios().length-1; i++)
+//									horarios += movie.getHorarios()[i] + " / ";
+//								horarios += movie.getHorarios()[movie.getHorarios().length-1];
+//								System.out.println("*** HORARIOS: " + horarios);
+//								System.out.println("*** MEDIA: "+movie.getMedia());
+//								System.out.println("*** QUANTIDADE DE NOTAS: "+movie.getQtdeNotas());
+//							}	
+//		        		}	
+//		        		System.out.println("\n\n"); 		
+//		        	} else if (option.equals("4")) {
+//		        		// Mostra todas as informacoes de todos os filmes
+//		        		List<Movie> movies = rmiServer.getAllMovies();
+//		        		Iterator iter = movies.iterator();
+//		        		while(iter.hasNext()){
+//		        			Movie movie = (Movie)iter.next();
+//			        		System.out.println("--------------------------------------------------------------------------------");
+//		        			System.out.println("*** ID: "+movie.getId());
+//							System.out.println("*** TITULO: "+movie.getTitulo());
+//							System.out.println("*** SINOPSE: "+movie.getSinopse());
+//							System.out.println("*** SALA: "+movie.getSala());
+//							String horarios = "";
+//							for(int i=0; i<movie.getHorarios().length-1; i++)
+//								horarios += movie.getHorarios()[i] + " / ";
+//							horarios += movie.getHorarios()[movie.getHorarios().length-1];
+//							System.out.println("*** HORARIOS: " + horarios);
+//							System.out.println("*** MEDIA: "+movie.getMedia());
+//							System.out.println("*** QUANTIDADE DE NOTAS: "+movie.getQtdeNotas());
+//		        			System.out.println("--------------------------------------------------------------------------------\n");
+//			        	}
+//			        	System.out.println("\n\n");
+//		        	} else if(option.equals("5")) {
+//		        		// Atribui nota a um dado filme
+//		        		String id, nota;
+//		        		id = c.readLine("Digite o ID do filme:");
+//		        		nota = c.readLine("Digite a nota:");
+//		        		if( (id != null && !id.trim().isEmpty()) &&
+//		        				(nota != null && !nota.trim().isEmpty()) )	{
+//		        			Double rate = Double.valueOf(nota);
+//		        			rmiServer.rateMovieById(id, rate);
+//		        		}
+//		        		System.out.println("Media atribuida com sucesso!");
+//		        		System.out.println("\n\n");
+//		        	} else if(option.equals("6")) {
+//		        		// Exibe a media atual de um dado filme
+//		        		info = c.readLine("Digite o ID do filme:");
+//		        		
+//		        		Double rating = 0.0;
+//		        		Integer voters = 0;
+//		        		
+//		        		if(info != null && !info.trim().isEmpty()){
+//		        			rating = rmiServer.getRatingById(info);
+//		        			voters = rmiServer.getVotersById(info);
+//		        		}
+//		        		System.out.println("***MEDIA: " + rating);
+//		        		System.out.println("***NUMERO DE CLIENTES QUE VOTARAM: " + voters);
+//		        	}
 		        	
 		        	// Exibe menu
 					System.out.println(rmiClient.showMenu());
