@@ -119,8 +119,16 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 
 	@Override
 	public Book getAllInfo(String isbn) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		//Exibir todas informacoes de um livro
+		Book retBook = null;
+		if(arrBooks != null) {
+			for (Book book : arrBooks) {
+				if(book.getIsbn().equals(isbn)) {
+					retBook = book;
+				}
+			}
+		}
+		return retBook;
 	}
 
 	@Override
