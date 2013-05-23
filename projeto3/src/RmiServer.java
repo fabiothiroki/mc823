@@ -133,8 +133,8 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 
 	@Override
 	public List<Book> getAllBooksInfo() throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		// Exibir todas as informacoes de todos os livros
+		return arrBooks;
 	}
 
 	@Override

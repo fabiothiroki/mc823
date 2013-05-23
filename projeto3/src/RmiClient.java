@@ -6,6 +6,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.List;
+import java.util.Iterator;
 
 import sun.nio.cs.ext.ISCII91;
 
@@ -102,28 +103,21 @@ public class RmiClient {
 		        		}	
 		        		System.out.println("\n\n"); 		
 		        	} 
-//		        	else if (option.equals("4")) {
-//		        		// Mostra todas as informacoes de todos os filmes
-//		        		List<Movie> movies = rmiServer.getAllMovies();
-//		        		Iterator iter = movies.iterator();
-//		        		while(iter.hasNext()){
-//		        			Movie movie = (Movie)iter.next();
-//			        		System.out.println("--------------------------------------------------------------------------------");
-//		        			System.out.println("*** ID: "+movie.getId());
-//							System.out.println("*** TITULO: "+movie.getTitulo());
-//							System.out.println("*** SINOPSE: "+movie.getSinopse());
-//							System.out.println("*** SALA: "+movie.getSala());
-//							String horarios = "";
-//							for(int i=0; i<movie.getHorarios().length-1; i++)
-//								horarios += movie.getHorarios()[i] + " / ";
-//							horarios += movie.getHorarios()[movie.getHorarios().length-1];
-//							System.out.println("*** HORARIOS: " + horarios);
-//							System.out.println("*** MEDIA: "+movie.getMedia());
-//							System.out.println("*** QUANTIDADE DE NOTAS: "+movie.getQtdeNotas());
-//		        			System.out.println("--------------------------------------------------------------------------------\n");
-//			        	}
-//			        	System.out.println("\n\n");
-//		        	} else if(option.equals("5")) {
+		        	else if (option.equals("4")) {
+		        		// Exibir todas as informacoes de todos os livros
+		        		List<Book> books = rmiServer.getAllBooksInfo();
+		        		Iterator iter = books.iterator();
+		        		while(iter.hasNext()){
+		        			Book book = (Book)iter.next();
+	
+						String resposta = book.getIsbn()+" "+book.getAuthor()+" "+book.getDescription()+" "+book.getPublisher()+" "+book.getYear()+" "+book.getQuantity();
+						
+						System.out.println(resposta);
+
+			        	}
+			        	System.out.println("\n\n");
+		        	} 
+//				else if(option.equals("5")) {
 //		        		// Atribui nota a um dado filme
 //		        		String id, nota;
 //		        		id = c.readLine("Digite o ID do filme:");
