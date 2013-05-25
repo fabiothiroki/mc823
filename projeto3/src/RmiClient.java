@@ -7,8 +7,13 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.List;
 import java.util.Iterator;
-
+import java.util.Date;
 import sun.nio.cs.ext.ISCII91;
+import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Scanner;
 
 public class RmiClient {
 	
@@ -16,6 +21,9 @@ public class RmiClient {
 		RMIServerInterface rmiServer;
 		Registry registry;
 		Boolean isClientLibrary = false;
+
+		long lStartTime; // start time
+		long lEndTime; // end time
 		
 		if (args.length < 2){
 			System.out.println("Usage: client hostname usertype");
@@ -45,13 +53,17 @@ public class RmiClient {
 				System.out.println(rmiClient.printMenu(isClientLibrary));
 				
 				// Le da entrada padrao
-				Console c = System.console();
+				Scanner c = new Scanner(System.in);
+				// Console c = System.console();
 		        if (c == null) {
 		            System.err.println("No console.");
-		            System.exit(1);
+		            // System.exit(1);
 		        }
 
-		        String option = c.readLine("Entre com uma das opcoes disponiveis: ");
+
+		        System.out.println("Entre com uma das opcoes disponiveis: ");
+		        String option = c.nextLine();
+		        // String option = c.readLine("Entre com uma das opcoes disponiveis: ");
 		        String info = null;
 		        
 		        while(option != null && !option.trim().isEmpty()) {
@@ -66,18 +78,27 @@ public class RmiClient {
 		        	else if(option.equals("1")) {
 		        		// Listar ISBN e título de todos os livros
 		        		System.out.println("\n\n");
+
+		        		lStartTime = new Date().getTime();
 		        		List<Book> titulos = rmiServer.listarTodosLivros();
+		        		lEndTime = new Date().getTime();
 		        		for (Book book : titulos) {
 							System.out.println(book.getIsbn()+" "+book.getTitle());
 						}
+						System.out.println("Elapsed milliseconds: " +  (lEndTime - lStartTime));
 		        		System.out.println("\n\n");
+
+		        		relatorio("relatorio_com_1.txt",""+(lEndTime - lStartTime));
 		        	} 
 		        	else if (option.equals("2")) {
 		        		//Exibir descrição de um livro
-		        		info = c.readLine("Digite o ISBN do livro:");
+		        		System.out.println("Digite o ISBN do livro:");
+		        		info = c.nextLine();
+		        		// info = c.readLine("Digite o ISBN do livro:");
 		        		
 		        		String desc = null;
 		        		if(info != null && !info.trim().isEmpty()) {
+		        			lStartTime = new Date().getTime();
 		        			desc = rmiServer.getBookDescByIsbn(info);
 		        			
 		        			if(desc != null) {
@@ -89,11 +110,15 @@ public class RmiClient {
 		        	} 
 		        	else if (option.equals("3")) {
 		        		//Exibir todas informacoes de um livro
-		        		info = c.readLine("Digite o ISBN do livro:");
+		        		System.out.println("Digite o ISBN do livro:");
+		        		info = c.nextLine();
+		        		// info = c.readLine("Digite o ISBN do livro:");
 		        		
 		        		Book book = new Book();
 		        		if(info != null && !info.trim().isEmpty()){
+		        			lStartTime = new Date().getTime();
 		        			book = rmiServer.getAllInfo(info);
+		        			lEndTime = new Date().getTime();
 		        			
 		        			if(book != null) {
 		        				String resposta = book.getIsbn()+" "+book.getAuthor()+" "+book.getDescription()+" "+
@@ -105,7 +130,9 @@ public class RmiClient {
 		        	} 
 		        	else if (option.equals("4")) {
 		        		// Exibir todas as informacoes de todos os livros
+		        		lStartTime = new Date().getTime();
 		        		List<Book> books = rmiServer.getAllBooksInfo();
+		        		lEndTime = new Date().getTime();
 		        		Iterator iter = books.iterator();
 		        		while(iter.hasNext()){
 		        			Book book = (Book)iter.next();
@@ -119,11 +146,14 @@ public class RmiClient {
 		        	} 
 					else if(option.equals("5")) {
 		        		// Exibir a quantidade de um livro
-		        		info = c.readLine("Digite o ISBN do livro:");
+		        		System.out.println("Digite o ISBN do livro:");
+		        		info = c.nextLine();
 
 		        		String quant = null;
 		        		if(info != null && !info.trim().isEmpty()) {
+		        			lStartTime = new Date().getTime();
 		        			quant = rmiServer.getBookQuant(info);
+		        			lEndTime = new Date().getTime();
 		        			
 		        			if(quant != null) {
 		        				System.out.println(quant);
@@ -138,17 +168,22 @@ public class RmiClient {
 		        		if (isClientLibrary) {
 
 			        		String newQtd;
-			        		info = c.readLine("Digite o ISBN do livro:");
-			        		newQtd = c.readLine("Digite a nova quantidade:");
+			        		System.out.println("Digite o ISBN do livro:");
+		        			info = c.nextLine();
+		        			System.out.println("Digite a nova quantidade:");
+			        		newQtd = c.nextLine();
 
 			        		if( (info != null && !info.trim().isEmpty()) && (newQtd != null && !newQtd.trim().isEmpty()) )	{
+			        			lStartTime = new Date().getTime();
 			        			rmiServer.setBookQuant(info, newQtd, isClientLibrary);
+			        			lEndTime = new Date().getTime();
 			        		}
 		        		}
 
 		        	}
 		        	
-		        	option = c.readLine("Entre com uma das opcoes disponiveis: ");
+		        	System.out.println("Entre com uma das opcoes disponiveis: ");
+		        	option = c.nextLine();
 		        }
 			}
 		} catch (RemoteException e) {
@@ -177,12 +212,19 @@ public class RmiClient {
 		
 		return menu;
 	}
-	
-//	void printMenu(int isClientLibrary) {
-//		  if (isClientLibrary) {
-//		    printf("6 - Alterar a quantidade de um livro\n");
-//		  }
-//		  printf("******************************************************\n");
-//	}
+
+	public static void relatorio(String fileName, String time) {
+		try  
+		{
+		    FileWriter fstream = new FileWriter(fileName, true); //true tells to append data.
+		    BufferedWriter out = new BufferedWriter(fstream);
+		    out.write(time+"\n");
+		    out.close();
+		}
+		catch (Exception e)
+		{
+		    System.err.println("Error: " + e.getMessage());
+		}
+	}
 
 }
