@@ -24,7 +24,6 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	Registry registry; // rmi registry for lookup the remote objects.
 	
 	List<Book> arrBooks = null; // lista onde sera armazenado os livros na memoria
-	List<Movie> movies = null;
 
 	/*
 	 * Construtor da classe RmiServer: tenta criar um servidor local na porta escolhida
@@ -91,6 +90,8 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 		    	
 		    	arrBooks.add(book);
 		    }
+		    stmt.close();
+			c.close();
 	    } catch ( Exception e ) {
 	    	System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	    	System.exit(0);
@@ -139,14 +140,56 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 
 	@Override
 	public String getBookQuant(String isbn) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		//Exibir a quantidade de um livro
+		Book retBook = null;
+		if(arrBooks != null) {
+			for (Book book : arrBooks) {
+				if(book.getIsbn().equals(isbn)) {
+					retBook = book;
+				}
+			}
+		}
+		return retBook.getQuantity();
 	}
 
 	@Override
-	public void setBookQuant(String isbn) throws RemoteException {
-		// TODO Auto-generated method stub
-		
+	public void setBookQuant(String isbn, String newQtd, Boolean isClientLibrary) throws RemoteException {
+		if (isClientLibrary) {
+			Connection c = null;
+		    Statement stmt = null;
+			try {
+				Class.forName("org.sqlite.JDBC");
+				c = DriverManager.getConnection("jdbc:sqlite:database.sqlite");
+	//			System.out.println("Opened database successfully");
+				stmt = c.createStatement();
+
+				String sql = "UPDATE books SET quantity ='";
+				sql +=newQtd;
+				sql +="' WHERE ISBN = '";
+				sql +=isbn;
+				sql +="'";
+
+				System.out.println(sql);
+
+				stmt.execute(sql);
+
+			    stmt.close();
+			    c.close();
+
+			    // Atualiza valor na memoria
+			    if(arrBooks != null) {
+				for (Book book : arrBooks) {
+					if(book.getIsbn().equals(isbn)) {
+						book.setQuantity(newQtd);
+					}
+				}
+		}
+
+		    } catch ( Exception e ) {
+		    	System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+		    	System.exit(0);
+		    }
+		}
 	}
 
 

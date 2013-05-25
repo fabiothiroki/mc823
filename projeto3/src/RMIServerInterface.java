@@ -19,5 +19,5 @@ public interface RMIServerInterface extends Remote {
 	public String getBookQuant(String isbn) throws RemoteException;
 	
 	//Alterar a quantidade de um livro
-	public void setBookQuant(String isbn) throws RemoteException;
+	public void setBookQuant(String isbn, String newQtd, Boolean isClientLibrary) throws RemoteException;
 }

@@ -4,7 +4,7 @@ all: compile
 clean:
 	rm *.class
 
-compile: cserver cclient
+compile: interface cserver cclient
 
 cserver:
 #	javac -classpath sqlite-jdbc-3.7.2.jar Movie.java RMIServerInterface.java RmiServer.java
@@ -14,7 +14,7 @@ cclient:
 	javac RmiClient.java
 	
 database:
-	javac Movie.java
+	javac Book.java
 
 interface:
 	javac RMIServerInterface.java

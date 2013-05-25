@@ -117,8 +117,20 @@ public class RmiClient {
 			        	}
 			        	System.out.println("\n\n");
 		        	} 
-//				else if(option.equals("5")) {
-//		        		// Atribui nota a um dado filme
+					else if(option.equals("5")) {
+		        		// Exibir a quantidade de um livro
+		        		info = c.readLine("Digite o ISBN do livro:");
+
+		        		String quant = null;
+		        		if(info != null && !info.trim().isEmpty()) {
+		        			quant = rmiServer.getBookQuant(info);
+		        			
+		        			if(quant != null) {
+		        				System.out.println(quant);
+		        			}
+		        		}
+		        		System.out.println("\n\n");
+
 //		        		String id, nota;
 //		        		id = c.readLine("Digite o ID do filme:");
 //		        		nota = c.readLine("Digite a nota:");
@@ -129,8 +141,17 @@ public class RmiClient {
 //		        		}
 //		        		System.out.println("Media atribuida com sucesso!");
 //		        		System.out.println("\n\n");
-//		        	} else if(option.equals("6")) {
-//		        		// Exibe a media atual de um dado filme
+		        	} 
+		        	else if(option.equals("6")) {
+		        		//Alterar a quantidade de um livro
+		        		String newQtd;
+		        		info = c.readLine("Digite o ISBN do livro:");
+		        		newQtd = c.readLine("Digite a nova quantidade:");
+
+		        		if( (info != null && !info.trim().isEmpty()) && (newQtd != null && !newQtd.trim().isEmpty()) )	{
+		        			rmiServer.setBookQuant(info, newQtd, isClientLibrary);
+		        		}
+
 //		        		info = c.readLine("Digite o ID do filme:");
 //		        		
 //		        		Double rating = 0.0;
@@ -142,10 +163,8 @@ public class RmiClient {
 //		        		}
 //		        		System.out.println("***MEDIA: " + rating);
 //		        		System.out.println("***NUMERO DE CLIENTES QUE VOTARAM: " + voters);
-//		        	}
+		        	}
 		        	
-		        	// Exibe menu
-//					System.out.println(rmiClient.printMenu());
 		        	option = c.readLine("Entre com uma das opcoes disponiveis: ");
 		        }
 			}
