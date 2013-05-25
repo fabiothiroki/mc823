@@ -131,38 +131,21 @@ public class RmiClient {
 		        		}
 		        		System.out.println("\n\n");
 
-//		        		String id, nota;
-//		        		id = c.readLine("Digite o ID do filme:");
-//		        		nota = c.readLine("Digite a nota:");
-//		        		if( (id != null && !id.trim().isEmpty()) &&
-//		        				(nota != null && !nota.trim().isEmpty()) )	{
-//		        			Double rate = Double.valueOf(nota);
-//		        			rmiServer.rateMovieById(id, rate);
-//		        		}
-//		        		System.out.println("Media atribuida com sucesso!");
-//		        		System.out.println("\n\n");
+
 		        	} 
 		        	else if(option.equals("6")) {
 		        		//Alterar a quantidade de um livro
-		        		String newQtd;
-		        		info = c.readLine("Digite o ISBN do livro:");
-		        		newQtd = c.readLine("Digite a nova quantidade:");
+		        		if (isClientLibrary) {
 
-		        		if( (info != null && !info.trim().isEmpty()) && (newQtd != null && !newQtd.trim().isEmpty()) )	{
-		        			rmiServer.setBookQuant(info, newQtd, isClientLibrary);
+			        		String newQtd;
+			        		info = c.readLine("Digite o ISBN do livro:");
+			        		newQtd = c.readLine("Digite a nova quantidade:");
+
+			        		if( (info != null && !info.trim().isEmpty()) && (newQtd != null && !newQtd.trim().isEmpty()) )	{
+			        			rmiServer.setBookQuant(info, newQtd, isClientLibrary);
+			        		}
 		        		}
 
-//		        		info = c.readLine("Digite o ID do filme:");
-//		        		
-//		        		Double rating = 0.0;
-//		        		Integer voters = 0;
-//		        		
-//		        		if(info != null && !info.trim().isEmpty()){
-//		        			rating = rmiServer.getRatingById(info);
-//		        			voters = rmiServer.getVotersById(info);
-//		        		}
-//		        		System.out.println("***MEDIA: " + rating);
-//		        		System.out.println("***NUMERO DE CLIENTES QUE VOTARAM: " + voters);
 		        	}
 		        	
 		        	option = c.readLine("Entre com uma das opcoes disponiveis: ");
