@@ -28,8 +28,10 @@ for x in range(0, 50):
 	#java RmiClient localhost 49152 library
 	# os.system("")
 
-	p = Popen(['java','RmiClient','localhost','49152', 'library'],stdin=PIPE)
-	p.stdin.write('1\n')
+	p = Popen(['java','RmiClient','143.106.16.29','49152', 'library'],stdin=PIPE)
+	p.stdin.write('6\n')
+	p.stdin.write('0385537859\n')
+	p.stdin.write('77\n')
 	p.stdin.write('0\n')
 
 	# Esse comando espera a resposta vir do servidor e ser impressa na tela

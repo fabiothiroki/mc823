@@ -1,4 +1,6 @@
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -19,9 +21,12 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	*/
 	private static final long serialVersionUID = -3100149800409779504L;
 	
-	final int thisPort = 49152; // porta efemera escolhida para o servidor
-	String thisAddress;
-	Registry registry; // rmi registry for lookup the remote objects.
+	private final int thisPort = 49152; // porta efemera escolhida para o servidor
+	private String thisAddress;
+	private Registry registry; // rmi registry for lookup the remote objects.
+	
+	private long lStartTime; // start time
+	private long lEndTime; // end time
 	
 	List<Book> arrBooks = null; // lista onde sera armazenado os livros na memoria
 
@@ -37,8 +42,6 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 			throw new RemoteException("can't get inet address.");
 		}
 		
-//		thisPort = 49152; // this port(registrys port)
-			
 		System.out.println("this address=" + thisAddress + ",port=" + thisPort);
 		try {
 			// create the registry and bind the name and object.
@@ -101,12 +104,17 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	@Override
 	public List<Book> listarTodosLivros() throws RemoteException {
 		// Listar ISBN e título de todos os livros
+		lStartTime = System.nanoTime();
+		lEndTime = System.nanoTime();
+		
+		relatorio("relatorio_1.txt",""+(lEndTime - lStartTime));
 		return arrBooks;
 	}
 
 	@Override
 	public String getBookDescByIsbn(String isbn) throws RemoteException {
 		//Exibir descrição de um livro
+		lStartTime = System.nanoTime();
 		String resposta = null;
 		if(arrBooks != null) {
 			for (Book book : arrBooks) {
@@ -115,12 +123,15 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 				}
 			}
 		}
+		lEndTime = System.nanoTime();
+		relatorio("relatorio_2.txt",""+(lEndTime - lStartTime));
 		return resposta;
 	}
 
 	@Override
 	public Book getAllInfo(String isbn) throws RemoteException {
 		//Exibir todas informacoes de um livro
+		lStartTime = System.nanoTime();
 		Book retBook = null;
 		if(arrBooks != null) {
 			for (Book book : arrBooks) {
@@ -129,18 +140,24 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 				}
 			}
 		}
+		lEndTime = System.nanoTime();
+		relatorio("relatorio_3.txt",""+(lEndTime - lStartTime));
 		return retBook;
 	}
 
 	@Override
 	public List<Book> getAllBooksInfo() throws RemoteException {
 		// Exibir todas as informacoes de todos os livros
+		lStartTime = System.nanoTime();
+		lEndTime = System.nanoTime();
+		relatorio("relatorio_4.txt",""+(lEndTime - lStartTime));
 		return arrBooks;
 	}
 
 	@Override
 	public String getBookQuant(String isbn) throws RemoteException {
 		//Exibir a quantidade de um livro
+		lStartTime = System.nanoTime();
 		Book retBook = null;
 		if(arrBooks != null) {
 			for (Book book : arrBooks) {
@@ -149,11 +166,14 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 				}
 			}
 		}
+		lEndTime = System.nanoTime();
+		relatorio("relatorio_5.txt",""+(lEndTime - lStartTime));
 		return retBook.getQuantity();
 	}
 
 	@Override
 	public void setBookQuant(String isbn, String newQtd, Boolean isClientLibrary) throws RemoteException {
+		lStartTime = System.nanoTime();
 		if (isClientLibrary) {
 			Connection c = null;
 		    Statement stmt = null;
@@ -190,90 +210,22 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 		    	System.exit(0);
 		    }
 		}
+		lEndTime = System.nanoTime();
+		relatorio("relatorio_6.txt",""+(lEndTime - lStartTime));
+	}
+	
+	public static void relatorio(String fileName, String time) {
+		try  
+		{
+		    FileWriter fstream = new FileWriter(fileName, true); //true tells to append data.
+		    BufferedWriter out = new BufferedWriter(fstream);
+		    out.write(time+"\n");
+		    out.close();
+		}
+		catch (Exception e)
+		{
+		    System.err.println("Error: " + e.getMessage());
+		}
 	}
 
-
-
-//	@Override
-//	public List<Movie> getAllMovieTitles()
-//			throws RemoteException {
-//		return movies;
-//	}
-//
-//	@Override
-//	public List<Movie> getAllMovies() throws RemoteException {
-//		return movies;
-//	}
-//
-//	@Override
-//	public Movie getMovieById(String id)
-//			throws RemoteException {
-//		Movie resposta = null;
-//		
-//		if(movies != null) {
-//			for (Movie filme : movies) {
-//				if(filme.getId().equals(id)) {
-//					resposta = filme;
-//				}
-//			}
-//			
-//		}
-//		return resposta;
-//	}
-//
-//	@Override
-//	public String getMovieSynById(String id) throws RemoteException {
-//		String resposta = null;
-//		if(movies != null) {
-//			for (Movie filme : movies) {
-//				if(filme.getId().equals(id)) {
-//					resposta = filme.getSinopse();
-//				}
-//			}
-//		}
-//		return resposta;
-//	}
-//
-//	@Override
-//	public Double getRatingById(String id) throws RemoteException {
-//		Double resposta = null;
-//		if(movies != null) {
-//			for (Movie filme : movies) {
-//				if(filme.getId().equals(id)) {
-//					resposta = filme.getMedia();
-//				}
-//			}
-//		}
-//		return resposta;
-//	}
-//	
-//	@Override
-//	public Integer getVotersById(String id) throws RemoteException {
-//		Integer resposta = null;
-//		if(movies != null) {
-//			for (Movie filme : movies) {
-//				if(filme.getId().equals(id)) {
-//					resposta = filme.getQtdeNotas();
-//				}
-//			}
-//		}
-//		return resposta;
-//	}
-//
-//	@Override
-//	public void rateMovieById(String id, Double rate) throws RemoteException {
-//		if(movies != null) {
-//			for (Movie filme : movies) {
-//				if(filme.getId().equals(id)) {
-//					Double oldMedia = filme.getMedia();
-//					System.out.println("Media antiga: "+oldMedia);
-//					Integer qtdeNotas = filme.getQtdeNotas();
-//					Double novaMedia = (oldMedia*qtdeNotas+rate)/(qtdeNotas+1);
-//					System.out.println("Nova media: "+novaMedia);
-//					filme.setMedia(novaMedia);
-//					filme.setQtdeNotas(qtdeNotas+1);
-//				}
-//			}
-//		}
-//	}
 }

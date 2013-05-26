@@ -3,21 +3,21 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface RMIServerInterface extends Remote {
-	// Listar ISBN e título de todos os livros
+	// 1 - Listar ISBN e título de todos os livros
 	public List<Book> listarTodosLivros() throws RemoteException;
 	
-	//Exibir descrição de um livro
+	// 2 - Exibir descrição de um livro
 	public String getBookDescByIsbn(String isbn) throws RemoteException;
 	
-	//Exibir todas informacoes de um livro
+	// 3 - Exibir todas informacoes de um livro
 	public Book getAllInfo(String isbn) throws RemoteException;
 	
-	//Exibir todas informacoes de todos os livros
+	// 4 - Exibir todas informacoes de todos os livros
 	public List<Book> getAllBooksInfo() throws RemoteException;
 	
-	//Exibir a quantidade de um livro
+	// 5 - Exibir a quantidade de um livro
 	public String getBookQuant(String isbn) throws RemoteException;
 	
-	//Alterar a quantidade de um livro
+	//6 - Alterar a quantidade de um livro
 	public void setBookQuant(String isbn, String newQtd, Boolean isClientLibrary) throws RemoteException;
 }

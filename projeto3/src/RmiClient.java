@@ -1,18 +1,13 @@
 //package rmi;
 
-import java.io.Console;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.List;
 import java.util.Iterator;
-import java.util.Date;
-import sun.nio.cs.ext.ISCII91;
-import java.io.*;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Scanner;
 
 public class RmiClient {
@@ -54,14 +49,7 @@ public class RmiClient {
 				
 				// Le da entrada padrao
 				Scanner c = new Scanner(System.in);
-				// Console c = System.console();
-		        if (c == null) {
-		            System.err.println("No console.");
-		            // System.exit(1);
-		        }
-
-
-		        System.out.println("Entre com uma das opcoes disponiveis: ");
+				System.out.println("Entre com uma das opcoes disponiveis: ");
 		        String option = c.nextLine();
 		        // String option = c.readLine("Entre com uma das opcoes disponiveis: ");
 		        String info = null;
@@ -79,9 +67,9 @@ public class RmiClient {
 		        		// Listar ISBN e título de todos os livros
 		        		System.out.println("\n\n");
 
-		        		lStartTime = new Date().getTime();
+		        		lStartTime = System.nanoTime();
 		        		List<Book> titulos = rmiServer.listarTodosLivros();
-		        		lEndTime = new Date().getTime();
+		        		lEndTime = System.nanoTime();
 		        		for (Book book : titulos) {
 							System.out.println(book.getIsbn()+" "+book.getTitle());
 						}
@@ -98,14 +86,19 @@ public class RmiClient {
 		        		
 		        		String desc = null;
 		        		if(info != null && !info.trim().isEmpty()) {
-		        			lStartTime = new Date().getTime();
+		        			lStartTime = System.nanoTime();
 		        			desc = rmiServer.getBookDescByIsbn(info);
+		        			lEndTime = System.nanoTime();
 		        			
 		        			if(desc != null) {
 		        				System.out.println(desc);
 		        			}
+		        			
+		        			relatorio("relatorio_com_2.txt",""+(lEndTime - lStartTime));
 		        		}
 		        		System.out.println("\n\n");
+		        		
+		        		
 		        		
 		        	} 
 		        	else if (option.equals("3")) {
@@ -116,33 +109,37 @@ public class RmiClient {
 		        		
 		        		Book book = new Book();
 		        		if(info != null && !info.trim().isEmpty()){
-		        			lStartTime = new Date().getTime();
+		        			lStartTime = System.nanoTime();
 		        			book = rmiServer.getAllInfo(info);
-		        			lEndTime = new Date().getTime();
+		        			lEndTime = System.nanoTime();
 		        			
 		        			if(book != null) {
 		        				String resposta = book.getIsbn()+" "+book.getAuthor()+" "+book.getDescription()+" "+
 		        						book.getPublisher()+" "+book.getYear()+" "+book.getQuantity();
 								System.out.println(resposta);
-							}	
+							}
+		        			
+		        			relatorio("relatorio_com_3.txt",""+(lEndTime - lStartTime));
 		        		}	
 		        		System.out.println("\n\n"); 		
 		        	} 
 		        	else if (option.equals("4")) {
 		        		// Exibir todas as informacoes de todos os livros
-		        		lStartTime = new Date().getTime();
+		        		lStartTime = System.nanoTime();
 		        		List<Book> books = rmiServer.getAllBooksInfo();
-		        		lEndTime = new Date().getTime();
-		        		Iterator iter = books.iterator();
+		        		lEndTime = System.nanoTime();
+		        		Iterator<Book> iter = books.iterator();
 		        		while(iter.hasNext()){
 		        			Book book = (Book)iter.next();
 	
-						String resposta = book.getIsbn()+" "+book.getAuthor()+" "+book.getDescription()+" "+book.getPublisher()+" "+book.getYear()+" "+book.getQuantity();
-						
-						System.out.println(resposta);
+							String resposta = book.getIsbn()+" "+book.getAuthor()+" "+book.getDescription()+" "+book.getPublisher()+" "+book.getYear()+" "+book.getQuantity();
+							
+							System.out.println(resposta);
 
 			        	}
 			        	System.out.println("\n\n");
+			        	
+			        	relatorio("relatorio_com_4.txt",""+(lEndTime - lStartTime));
 		        	} 
 					else if(option.equals("5")) {
 		        		// Exibir a quantidade de um livro
@@ -151,17 +148,19 @@ public class RmiClient {
 
 		        		String quant = null;
 		        		if(info != null && !info.trim().isEmpty()) {
-		        			lStartTime = new Date().getTime();
+		        			lStartTime = System.nanoTime();
 		        			quant = rmiServer.getBookQuant(info);
-		        			lEndTime = new Date().getTime();
+		        			lEndTime = System.nanoTime();
 		        			
 		        			if(quant != null) {
 		        				System.out.println(quant);
 		        			}
+		        			
+		        			relatorio("relatorio_com_5.txt",""+(lEndTime - lStartTime));
 		        		}
 		        		System.out.println("\n\n");
 
-
+		        		
 		        	} 
 		        	else if(option.equals("6")) {
 		        		//Alterar a quantidade de um livro
@@ -174,9 +173,11 @@ public class RmiClient {
 			        		newQtd = c.nextLine();
 
 			        		if( (info != null && !info.trim().isEmpty()) && (newQtd != null && !newQtd.trim().isEmpty()) )	{
-			        			lStartTime = new Date().getTime();
+			        			lStartTime = System.nanoTime();
 			        			rmiServer.setBookQuant(info, newQtd, isClientLibrary);
-			        			lEndTime = new Date().getTime();
+			        			lEndTime = System.nanoTime();
+			        			
+			        			relatorio("relatorio_com_6.txt",""+(lEndTime - lStartTime));
 			        		}
 		        		}
 
@@ -185,6 +186,7 @@ public class RmiClient {
 		        	System.out.println("Entre com uma das opcoes disponiveis: ");
 		        	option = c.nextLine();
 		        }
+		        c.close();
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
