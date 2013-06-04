@@ -21,7 +21,7 @@ public class RmiClient {
 		long lEndTime; // end time
 		
 		if (args.length < 2){
-			System.out.println("Usage: client hostname usertype");
+			System.out.println("Usage: client hostname port usertype");
 			System.exit(1);
 		}
 		
@@ -29,12 +29,13 @@ public class RmiClient {
 		String serverPort = args[1];
 		
 		try {
-			// Obtem o "registry" do objeto que fornecera as informacoes do
-			// cinema no servidor
+			
+			// LocateRegistry: used to obtain a reference to a bootstrap remote object registry on a particular host (including the local host), 
+                        // or to create a remote object registry that accepts calls on a specific port.  
 			registry = LocateRegistry.getRegistry(serverAddress, (new Integer(
 					serverPort)).intValue());
 			
-			// Look up the remote object
+			// Obtains an object handle from the Object Registry
 			rmiServer = (RMIServerInterface) (registry.lookup("rmiServer"));
 			RmiClient rmiClient = new RmiClient();
 			
@@ -214,7 +215,12 @@ public class RmiClient {
 		
 		return menu;
 	}
-
+        
+        /*
+         * Recebe o nome de um arquivo como parametro e um valor de tempo
+         * em nanosegundos.
+         * Concatena esse tempo no arquivo seguido de uma quebra de linha
+         */
 	public static void relatorio(String fileName, String time) {
 		try  
 		{

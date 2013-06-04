@@ -36,15 +36,15 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	 */
 	public RmiServer() throws RemoteException {
 		try {
-			// get the address of this host.
+			// Returns the local host
 			thisAddress = (InetAddress.getLocalHost()).toString();
 		} catch (Exception e) {
 			throw new RemoteException("can't get inet address.");
 		}
 		
-		System.out.println("this address=" + thisAddress + ",port=" + thisPort);
 		try {
-			// create the registry and bind the name and object.
+			// Creates and exports a Registry instance on the local 
+                        // host that accepts requests on the specified port
 			registry = LocateRegistry.createRegistry(thisPort);
 			registry.rebind("rmiServer", this);
 		} catch (RemoteException e) {
@@ -67,6 +67,8 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 	
 	/**
 	 * Carrega as informações dos livros na memória
+         * Utiliza o driver java para sqlite para conectar e realizar as
+         * consultas no banco
 	 */
 	public void loadBooks() {
 		
@@ -173,6 +175,10 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 
 	@Override
 	public void setBookQuant(String isbn, String newQtd, Boolean isClientLibrary) throws RemoteException {
+                // Altera a quantidade de um livro
+                // Disponivel somente para usuarios do tipo "livraria"
+                // Utiliza o driver java para sqlite para realizar a conexao
+                // e as alteracoes no banco
 		lStartTime = System.nanoTime();
 		if (isClientLibrary) {
 			Connection c = null;
@@ -214,7 +220,13 @@ public class RmiServer extends UnicastRemoteObject implements RMIServerInterface
 		relatorio("relatorio_6.txt",""+(lEndTime - lStartTime));
 	}
 	
+        /*
+         * Recebe o nome de um arquivo como parametro e um valor de tempo
+         * em nanosegundos.
+         * Concatena esse tempo no arquivo seguido de uma quebra de linha
+         */
 	public static void relatorio(String fileName, String time) {
+               
 		try  
 		{
 		    FileWriter fstream = new FileWriter(fileName, true); //true tells to append data.

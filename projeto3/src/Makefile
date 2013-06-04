@@ -7,7 +7,6 @@ clean:
 compile: interface cserver cclient
 
 cserver:
-#	javac -classpath sqlite-jdbc-3.7.2.jar Movie.java RMIServerInterface.java RmiServer.java
 	javac RmiServer.java
 
 cclient:
@@ -20,12 +19,9 @@ interface:
 	javac RMIServerInterface.java
 
 server:
-#	java RmiServer
 	java -classpath .:sqlite-jdbc-3.7.2.jar: RmiServer
-# 	java -classpath src:lib/etapa2.jar main/Main $(INPUT) $(OUTPUT)
- 	
 
-# client:
-# 	java RmiClient ${ARGS}
+client:
+	java RmiClient ${ARGS}
 
 

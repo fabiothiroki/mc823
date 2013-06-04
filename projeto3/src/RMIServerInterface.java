@@ -2,6 +2,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+// interface que definirá os métodos que podem ser invocados remotamente
 public interface RMIServerInterface extends Remote {
 	// 1 - Listar ISBN e título de todos os livros
 	public List<Book> listarTodosLivros() throws RemoteException;
